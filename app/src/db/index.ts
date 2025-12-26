@@ -1,19 +1,14 @@
-import { config } from "dotenv";
-
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
-
-import * as schema1 from "./auth-schema.ts";
+import { env } from "@/env.ts";
+import * as authSchema from "@/modules/auth/auth-schema";
 import * as schema2 from "./saas-schema.ts";
 
-config();
+export const schema = { ...authSchema, ...integrationSchema };
 
 const pool = new Pool({
-	connectionString: process.env.DATABASE_URL!,
+	connectionString: env.DATABASE_URL,
 });
 export const db = drizzle(pool, {
-	schema: {
-		...schema1,
-		...schema2,
-	},
+	schema,
 });
