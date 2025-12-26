@@ -1,25 +1,31 @@
-import { createEnv } from '@t3-oss/env-core'
-import { z } from 'zod'
+import { createEnv } from "@t3-oss/env-core";
+import { z } from "zod";
 
 export const env = createEnv({
 	skipValidation: !!process.env.SKIP_ENV_VALIDATION,
 
 	server: {
-		SERVER_URL: z.string().url().optional(),
+		SERVER_URL: z.url().optional(),
 
 		// Database
-		DATABASE_URL: z.string().url(),
+		DATABASE_URL: z.url(),
 
 		// Auth (Better-Auth)
 		BETTER_AUTH_SECRET: z.string().min(1),
-		BETTER_AUTH_URL: z.string().url(),
+		BETTER_AUTH_URL: z.url(),
+
+		GITHUB_CLIENT_ID: z.string().optional(),
+		GITHUB_CLIENT_SECRET: z.string().optional(),
+
+		GOOGLE_CLIENT_ID: z.string().optional(),
+		GOOGLE_CLIENT_SECRET: z.string().optional(),
 	},
 
 	/**
 	 * The prefix that client-side variables must have. This is enforced both at
 	 * a type-level and at runtime.
 	 */
-	clientPrefix: 'VITE_',
+	clientPrefix: "VITE_",
 
 	client: {
 		VITE_APP_TITLE: z.string().min(1).optional(),
@@ -45,4 +51,4 @@ export const env = createEnv({
 	 * explicitly specify this option as true.
 	 */
 	emptyStringAsUndefined: true,
-})
+});
