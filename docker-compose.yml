@@ -1,0 +1,92 @@
+services:
+  # --- The Reverse Proxy ---
+  caddy:
+    image: caddy:alpine
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - app
+
+  # --- The Database (TimescaleDB) ---
+  db:
+    image: timescale/timescaledb:latest-pg16
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER:-admin}
+      POSTGRES_PASSWORD: ${DB_PASS:-securepassword}
+      POSTGRES_DB: ${DB_NAME:-boringstatus}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    ports:
+      # Only expose to localhost for debugging, use internal network for apps
+      - "127.0.0.1:5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-admin}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  migrate:
+    image: oven/bun:1-alpine
+    working_dir: /app
+    volumes:
+      - ./app:/app
+    depends_on:
+      - db
+    environment:
+      CI: "true"
+      DATABASE_URL: postgres://${DB_USER:-admin}:${DB_PASS:-securepassword}@db:5432/${DB_NAME:-boringstatus}
+    command: >
+      sh -c "
+      bun ci && 
+      bunx drizzle-kit migrate
+      "
+    restart: "no"
+
+  adminer:
+    image: adminer:latest
+    ports:
+      - "8080:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: db
+      ADMINER_DEFAULT_USER: ${DB_USER:-admin}
+      ADMINER_DEFAULT_PASSWORD: ${DB_PASS:-securepassword}
+      ADMINER_DEFAULT_DB: ${DB_NAME:-boringstatus}
+    depends_on:
+      - db
+
+  # --- The Web App (TanStack Start) ---
+  app:
+    build: ./app
+    restart: always
+    env_file: .env.production
+    environment:
+      DATABASE_URL: postgres://${DB_USER:-admin}:${DB_PASS:-securepassword}@db:5432/${DB_NAME:-boringstatus}
+      BETTER_AUTH_URL: ${BETTER_AUTH_URL:-https://localhost}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      db:
+        condition: service_healthy
+
+  # --- The Pinger (Go Worker) ---
+  agent:
+    build: ./agent
+    restart: always
+    env_file: .env.production
+    environment:
+      DATABASE_URL: postgres://${DB_USER:-admin}:${DB_PASS:-securepassword}@db:5432/${DB_NAME:-boringstatus}?sslmode=disable
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  caddy_data:
+  caddy_config:
+  pg_data:
