@@ -25,7 +25,6 @@ export const apiKey = pgTable("api_key", {
 	scopes: jsonb("scopes").default([]).$type<string[]>(),
 
 	// Meta
-	lastUsedAt: timestamp("last_used_at"),
 	isActive: boolean("is_active").default(true),
 	createdAt: timestamp("created_at").defaultNow(),
 });
