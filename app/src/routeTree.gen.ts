@@ -9,11 +9,22 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as AuthRouteRouteImport } from './routes/auth/route'
 import { Route as DashboardLayoutRouteRouteImport } from './routes/_dashboardLayout/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as StatusSlugRouteImport } from './routes/status/$slug'
 import { Route as OrganizationOrganizationViewRouteImport } from './routes/organization/$organizationView'
-import { Route as AuthAuthViewRouteImport } from './routes/auth/$authView'
+import { Route as AuthTwoFactorRouteImport } from './routes/auth/two-factor'
+import { Route as AuthSignUpRouteImport } from './routes/auth/sign-up'
+import { Route as AuthSignOutRouteImport } from './routes/auth/sign-out'
+import { Route as AuthSignInRouteImport } from './routes/auth/sign-in'
+import { Route as AuthResetPasswordRouteImport } from './routes/auth/reset-password'
+import { Route as AuthRecoverAccountRouteImport } from './routes/auth/recover-account'
+import { Route as AuthMagicLinkRouteImport } from './routes/auth/magic-link'
+import { Route as AuthForgotPasswordRouteImport } from './routes/auth/forgot-password'
+import { Route as AuthEmailOtpRouteImport } from './routes/auth/email-otp'
+import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
+import { Route as AuthAcceptInvitationRouteImport } from './routes/auth/accept-invitation'
 import { Route as AccountAccountViewRouteImport } from './routes/account/$accountView'
 import { Route as DashboardLayoutStatusPagesIndexRouteImport } from './routes/_dashboardLayout/status-pages/index'
 import { Route as DashboardLayoutMonitorsIndexRouteImport } from './routes/_dashboardLayout/monitors/index'
@@ -24,6 +35,11 @@ import { Route as DashboardLayoutStatusPagesStatusPageIdRouteImport } from './ro
 import { Route as DashboardLayoutMonitorsAddRouteImport } from './routes/_dashboardLayout/monitors/add'
 import { Route as DashboardLayoutMonitorsMonitorIdRouteImport } from './routes/_dashboardLayout/monitors/$monitorId'
 
+const AuthRouteRoute = AuthRouteRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardLayoutRouteRoute = DashboardLayoutRouteRouteImport.update({
   id: '/_dashboardLayout',
   getParentRoute: () => rootRouteImport,
@@ -44,10 +60,60 @@ const OrganizationOrganizationViewRoute =
     path: '/organization/$organizationView',
     getParentRoute: () => rootRouteImport,
   } as any)
-const AuthAuthViewRoute = AuthAuthViewRouteImport.update({
-  id: '/auth/$authView',
-  path: '/auth/$authView',
-  getParentRoute: () => rootRouteImport,
+const AuthTwoFactorRoute = AuthTwoFactorRouteImport.update({
+  id: '/two-factor',
+  path: '/two-factor',
+  getParentRoute: () => AuthRouteRoute,
+} as any)
+const AuthSignUpRoute = AuthSignUpRouteImport.update({
+  id: '/sign-up',
+  path: '/sign-up',
+  getParentRoute: () => AuthRouteRoute,
+} as any)
+const AuthSignOutRoute = AuthSignOutRouteImport.update({
+  id: '/sign-out',
+  path: '/sign-out',
+  getParentRoute: () => AuthRouteRoute,
+} as any)
+const AuthSignInRoute = AuthSignInRouteImport.update({
+  id: '/sign-in',
+  path: '/sign-in',
+  getParentRoute: () => AuthRouteRoute,
+} as any)
+const AuthResetPasswordRoute = AuthResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => AuthRouteRoute,
+} as any)
+const AuthRecoverAccountRoute = AuthRecoverAccountRouteImport.update({
+  id: '/recover-account',
+  path: '/recover-account',
+  getParentRoute: () => AuthRouteRoute,
+} as any)
+const AuthMagicLinkRoute = AuthMagicLinkRouteImport.update({
+  id: '/magic-link',
+  path: '/magic-link',
+  getParentRoute: () => AuthRouteRoute,
+} as any)
+const AuthForgotPasswordRoute = AuthForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
+  getParentRoute: () => AuthRouteRoute,
+} as any)
+const AuthEmailOtpRoute = AuthEmailOtpRouteImport.update({
+  id: '/email-otp',
+  path: '/email-otp',
+  getParentRoute: () => AuthRouteRoute,
+} as any)
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/callback',
+  path: '/callback',
+  getParentRoute: () => AuthRouteRoute,
+} as any)
+const AuthAcceptInvitationRoute = AuthAcceptInvitationRouteImport.update({
+  id: '/accept-invitation',
+  path: '/accept-invitation',
+  getParentRoute: () => AuthRouteRoute,
 } as any)
 const AccountAccountViewRoute = AccountAccountViewRouteImport.update({
   id: '/account/$accountView',
@@ -104,8 +170,19 @@ const DashboardLayoutMonitorsMonitorIdRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRouteRouteWithChildren
   '/account/$accountView': typeof AccountAccountViewRoute
-  '/auth/$authView': typeof AuthAuthViewRoute
+  '/auth/accept-invitation': typeof AuthAcceptInvitationRoute
+  '/auth/callback': typeof AuthCallbackRoute
+  '/auth/email-otp': typeof AuthEmailOtpRoute
+  '/auth/forgot-password': typeof AuthForgotPasswordRoute
+  '/auth/magic-link': typeof AuthMagicLinkRoute
+  '/auth/recover-account': typeof AuthRecoverAccountRoute
+  '/auth/reset-password': typeof AuthResetPasswordRoute
+  '/auth/sign-in': typeof AuthSignInRoute
+  '/auth/sign-out': typeof AuthSignOutRoute
+  '/auth/sign-up': typeof AuthSignUpRoute
+  '/auth/two-factor': typeof AuthTwoFactorRoute
   '/organization/$organizationView': typeof OrganizationOrganizationViewRoute
   '/status/$slug': typeof StatusSlugRoute
   '/monitors/$monitorId': typeof DashboardLayoutMonitorsMonitorIdRoute
@@ -119,8 +196,19 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRouteRouteWithChildren
   '/account/$accountView': typeof AccountAccountViewRoute
-  '/auth/$authView': typeof AuthAuthViewRoute
+  '/auth/accept-invitation': typeof AuthAcceptInvitationRoute
+  '/auth/callback': typeof AuthCallbackRoute
+  '/auth/email-otp': typeof AuthEmailOtpRoute
+  '/auth/forgot-password': typeof AuthForgotPasswordRoute
+  '/auth/magic-link': typeof AuthMagicLinkRoute
+  '/auth/recover-account': typeof AuthRecoverAccountRoute
+  '/auth/reset-password': typeof AuthResetPasswordRoute
+  '/auth/sign-in': typeof AuthSignInRoute
+  '/auth/sign-out': typeof AuthSignOutRoute
+  '/auth/sign-up': typeof AuthSignUpRoute
+  '/auth/two-factor': typeof AuthTwoFactorRoute
   '/organization/$organizationView': typeof OrganizationOrganizationViewRoute
   '/status/$slug': typeof StatusSlugRoute
   '/monitors/$monitorId': typeof DashboardLayoutMonitorsMonitorIdRoute
@@ -136,8 +224,19 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_dashboardLayout': typeof DashboardLayoutRouteRouteWithChildren
+  '/auth': typeof AuthRouteRouteWithChildren
   '/account/$accountView': typeof AccountAccountViewRoute
-  '/auth/$authView': typeof AuthAuthViewRoute
+  '/auth/accept-invitation': typeof AuthAcceptInvitationRoute
+  '/auth/callback': typeof AuthCallbackRoute
+  '/auth/email-otp': typeof AuthEmailOtpRoute
+  '/auth/forgot-password': typeof AuthForgotPasswordRoute
+  '/auth/magic-link': typeof AuthMagicLinkRoute
+  '/auth/recover-account': typeof AuthRecoverAccountRoute
+  '/auth/reset-password': typeof AuthResetPasswordRoute
+  '/auth/sign-in': typeof AuthSignInRoute
+  '/auth/sign-out': typeof AuthSignOutRoute
+  '/auth/sign-up': typeof AuthSignUpRoute
+  '/auth/two-factor': typeof AuthTwoFactorRoute
   '/organization/$organizationView': typeof OrganizationOrganizationViewRoute
   '/status/$slug': typeof StatusSlugRoute
   '/_dashboardLayout/monitors/$monitorId': typeof DashboardLayoutMonitorsMonitorIdRoute
@@ -153,8 +252,19 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/auth'
     | '/account/$accountView'
-    | '/auth/$authView'
+    | '/auth/accept-invitation'
+    | '/auth/callback'
+    | '/auth/email-otp'
+    | '/auth/forgot-password'
+    | '/auth/magic-link'
+    | '/auth/recover-account'
+    | '/auth/reset-password'
+    | '/auth/sign-in'
+    | '/auth/sign-out'
+    | '/auth/sign-up'
+    | '/auth/two-factor'
     | '/organization/$organizationView'
     | '/status/$slug'
     | '/monitors/$monitorId'
@@ -168,8 +278,19 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/auth'
     | '/account/$accountView'
-    | '/auth/$authView'
+    | '/auth/accept-invitation'
+    | '/auth/callback'
+    | '/auth/email-otp'
+    | '/auth/forgot-password'
+    | '/auth/magic-link'
+    | '/auth/recover-account'
+    | '/auth/reset-password'
+    | '/auth/sign-in'
+    | '/auth/sign-out'
+    | '/auth/sign-up'
+    | '/auth/two-factor'
     | '/organization/$organizationView'
     | '/status/$slug'
     | '/monitors/$monitorId'
@@ -184,8 +305,19 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_dashboardLayout'
+    | '/auth'
     | '/account/$accountView'
-    | '/auth/$authView'
+    | '/auth/accept-invitation'
+    | '/auth/callback'
+    | '/auth/email-otp'
+    | '/auth/forgot-password'
+    | '/auth/magic-link'
+    | '/auth/recover-account'
+    | '/auth/reset-password'
+    | '/auth/sign-in'
+    | '/auth/sign-out'
+    | '/auth/sign-up'
+    | '/auth/two-factor'
     | '/organization/$organizationView'
     | '/status/$slug'
     | '/_dashboardLayout/monitors/$monitorId'
@@ -201,8 +333,8 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DashboardLayoutRouteRoute: typeof DashboardLayoutRouteRouteWithChildren
+  AuthRouteRoute: typeof AuthRouteRouteWithChildren
   AccountAccountViewRoute: typeof AccountAccountViewRoute
-  AuthAuthViewRoute: typeof AuthAuthViewRoute
   OrganizationOrganizationViewRoute: typeof OrganizationOrganizationViewRoute
   StatusSlugRoute: typeof StatusSlugRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
@@ -210,6 +342,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_dashboardLayout': {
       id: '/_dashboardLayout'
       path: ''
@@ -238,12 +377,82 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OrganizationOrganizationViewRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/auth/$authView': {
-      id: '/auth/$authView'
-      path: '/auth/$authView'
-      fullPath: '/auth/$authView'
-      preLoaderRoute: typeof AuthAuthViewRouteImport
-      parentRoute: typeof rootRouteImport
+    '/auth/two-factor': {
+      id: '/auth/two-factor'
+      path: '/two-factor'
+      fullPath: '/auth/two-factor'
+      preLoaderRoute: typeof AuthTwoFactorRouteImport
+      parentRoute: typeof AuthRouteRoute
+    }
+    '/auth/sign-up': {
+      id: '/auth/sign-up'
+      path: '/sign-up'
+      fullPath: '/auth/sign-up'
+      preLoaderRoute: typeof AuthSignUpRouteImport
+      parentRoute: typeof AuthRouteRoute
+    }
+    '/auth/sign-out': {
+      id: '/auth/sign-out'
+      path: '/sign-out'
+      fullPath: '/auth/sign-out'
+      preLoaderRoute: typeof AuthSignOutRouteImport
+      parentRoute: typeof AuthRouteRoute
+    }
+    '/auth/sign-in': {
+      id: '/auth/sign-in'
+      path: '/sign-in'
+      fullPath: '/auth/sign-in'
+      preLoaderRoute: typeof AuthSignInRouteImport
+      parentRoute: typeof AuthRouteRoute
+    }
+    '/auth/reset-password': {
+      id: '/auth/reset-password'
+      path: '/reset-password'
+      fullPath: '/auth/reset-password'
+      preLoaderRoute: typeof AuthResetPasswordRouteImport
+      parentRoute: typeof AuthRouteRoute
+    }
+    '/auth/recover-account': {
+      id: '/auth/recover-account'
+      path: '/recover-account'
+      fullPath: '/auth/recover-account'
+      preLoaderRoute: typeof AuthRecoverAccountRouteImport
+      parentRoute: typeof AuthRouteRoute
+    }
+    '/auth/magic-link': {
+      id: '/auth/magic-link'
+      path: '/magic-link'
+      fullPath: '/auth/magic-link'
+      preLoaderRoute: typeof AuthMagicLinkRouteImport
+      parentRoute: typeof AuthRouteRoute
+    }
+    '/auth/forgot-password': {
+      id: '/auth/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/auth/forgot-password'
+      preLoaderRoute: typeof AuthForgotPasswordRouteImport
+      parentRoute: typeof AuthRouteRoute
+    }
+    '/auth/email-otp': {
+      id: '/auth/email-otp'
+      path: '/email-otp'
+      fullPath: '/auth/email-otp'
+      preLoaderRoute: typeof AuthEmailOtpRouteImport
+      parentRoute: typeof AuthRouteRoute
+    }
+    '/auth/callback': {
+      id: '/auth/callback'
+      path: '/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
+      parentRoute: typeof AuthRouteRoute
+    }
+    '/auth/accept-invitation': {
+      id: '/auth/accept-invitation'
+      path: '/accept-invitation'
+      fullPath: '/auth/accept-invitation'
+      preLoaderRoute: typeof AuthAcceptInvitationRouteImport
+      parentRoute: typeof AuthRouteRoute
     }
     '/account/$accountView': {
       id: '/account/$accountView'
@@ -335,11 +544,43 @@ const DashboardLayoutRouteRouteChildren: DashboardLayoutRouteRouteChildren = {
 const DashboardLayoutRouteRouteWithChildren =
   DashboardLayoutRouteRoute._addFileChildren(DashboardLayoutRouteRouteChildren)
 
+interface AuthRouteRouteChildren {
+  AuthAcceptInvitationRoute: typeof AuthAcceptInvitationRoute
+  AuthCallbackRoute: typeof AuthCallbackRoute
+  AuthEmailOtpRoute: typeof AuthEmailOtpRoute
+  AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute
+  AuthMagicLinkRoute: typeof AuthMagicLinkRoute
+  AuthRecoverAccountRoute: typeof AuthRecoverAccountRoute
+  AuthResetPasswordRoute: typeof AuthResetPasswordRoute
+  AuthSignInRoute: typeof AuthSignInRoute
+  AuthSignOutRoute: typeof AuthSignOutRoute
+  AuthSignUpRoute: typeof AuthSignUpRoute
+  AuthTwoFactorRoute: typeof AuthTwoFactorRoute
+}
+
+const AuthRouteRouteChildren: AuthRouteRouteChildren = {
+  AuthAcceptInvitationRoute: AuthAcceptInvitationRoute,
+  AuthCallbackRoute: AuthCallbackRoute,
+  AuthEmailOtpRoute: AuthEmailOtpRoute,
+  AuthForgotPasswordRoute: AuthForgotPasswordRoute,
+  AuthMagicLinkRoute: AuthMagicLinkRoute,
+  AuthRecoverAccountRoute: AuthRecoverAccountRoute,
+  AuthResetPasswordRoute: AuthResetPasswordRoute,
+  AuthSignInRoute: AuthSignInRoute,
+  AuthSignOutRoute: AuthSignOutRoute,
+  AuthSignUpRoute: AuthSignUpRoute,
+  AuthTwoFactorRoute: AuthTwoFactorRoute,
+}
+
+const AuthRouteRouteWithChildren = AuthRouteRoute._addFileChildren(
+  AuthRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DashboardLayoutRouteRoute: DashboardLayoutRouteRouteWithChildren,
+  AuthRouteRoute: AuthRouteRouteWithChildren,
   AccountAccountViewRoute: AccountAccountViewRoute,
-  AuthAuthViewRoute: AuthAuthViewRoute,
   OrganizationOrganizationViewRoute: OrganizationOrganizationViewRoute,
   StatusSlugRoute: StatusSlugRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
