@@ -4,7 +4,7 @@ import { z } from "zod";
 
 import { db } from "@/db";
 import { getSession } from "@/modules/auth/auth.api";
-import { monitorsToChannels } from "@/modules/monitors/monitors.schema";
+import { monitor, monitorsToChannels } from "@/modules/monitors/monitors.schema";
 
 import { matchChannel as matchNotificationChannel } from "./integrations.fn";
 import { notificationChannel } from "./integrations.schema";
@@ -44,7 +44,9 @@ export const createChannel = createServerFn({ method: "POST" })
 			.values({
 				...data,
 				// TODO: implement actual verification
-				verified: true,
+				lastFailureAt: null,
+				failureCount: 0,
+				verified: false,
 
 				organizationId: activeOrgId, // IMPORTANT: should stay last
 			})
@@ -68,8 +70,10 @@ export const updateChannel = createServerFn({ method: "POST" })
 			.update(notificationChannel)
 			.set({
 				...updateData,
-				// TODO: Reset verification?
-				verified: true,
+				// Reset verification
+				verified: false,
+				lastFailureAt: null,
+				failureCount: 0,
 			})
 			.where(
 				and(
@@ -177,21 +181,29 @@ export const linkMonitorToChannel = createServerFn({ method: "POST" })
 	.handler(async ({ data }) => {
 		const activeOrgId = await requireAuth();
 
-		// Verify ownership of BOTH monitor and channel
-		const channelExists = await db.query.notificationChannel.findFirst({
+		// Verify ownership of channel
+		const channel = await db.query.notificationChannel.findFirst({
 			where: and(
 				eq(notificationChannel.id, data.channelId),
-				eq(notificationChannel.organizationId, activeOrgId),
-			),
+				eq(notificationChannel.organizationId, activeOrgId)
+			)
 		});
+		if (!channel) throw new Error("Channel not found or unauthorized");
 
-		if (!channelExists) throw new Error("Channel not found or unauthorized");
+		// Verify ownership of monitor
+		const monitor_ = await db.query.monitor.findFirst({
+			where: and(
+				eq(monitor.id, data.monitorId),
+				eq(monitor.organizationId, activeOrgId)
+			)
+		});
+		if (!monitor_) throw new Error("Monitor not found or unauthorized");
 
 		await db
 			.insert(monitorsToChannels)
 			.values({
-				monitorId: data.monitorId,
-				channelId: data.channelId,
+				monitorId: monitor_.id,
+				channelId: channel.id,
 			})
 			.onConflictDoNothing();
 
