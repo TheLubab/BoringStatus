@@ -4,6 +4,7 @@ const providers = {
 	slack: SlackProvider,
 };
 
+// TODO: this is temporary
 export async function sendAlert(
 	type: keyof typeof providers,
 	config: string,
