@@ -13,7 +13,6 @@ export const apiKey = pgTable("api_key", {
 	id: uuid("id").defaultRandom().primaryKey(),
 
 	// null if it's a system key
-	// TODO: this may be an attack surface, careful with that
 	organizationId: text("organization_id").references(() => organization.id),
 
 	key: text("key").notNull().unique(),
