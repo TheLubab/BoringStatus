@@ -4,10 +4,7 @@ import { and, desc, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
 import { getSession } from "@/modules/auth/auth.api";
 
-import {
-	statusPage,
-	statusPageToMonitors,
-} from "./statuspages.schema";
+import { statusPage, statusPageToMonitors } from "./statuspages.schema";
 import {
 	createStatusPageSchema,
 	deleteStatusPageSchema,
@@ -120,8 +117,8 @@ export const createStatusPage = createServerFn({ method: "POST" })
 				const monitors = await tx.query.monitor.findMany({
 					where: and(
 						inArray(monitor.id, monitorIds),
-						eq(monitor.organizationId, activeOrgId)
-					)
+						eq(monitor.organizationId, activeOrgId),
+					),
 				});
 				if (monitors.length !== monitorIds.length) {
 					throw new Error("One or more monitors not found or unauthorized");
@@ -176,10 +173,19 @@ export const updateStatusPage = createServerFn({ method: "POST" })
 
 			// B. Insert new links if provided
 			if (monitorIds && monitorIds.length > 0) {
+				const monitors = await tx.query.monitor.findMany({
+					where: and(
+						inArray(monitor.id, monitorIds),
+						eq(monitor.organizationId, activeOrgId),
+					),
+				});
+				if (monitors.length !== monitorIds.length) {
+					throw new Error("One or more monitors not found or unauthorized");
+				}
 				await tx.insert(statusPageToMonitors).values(
-					monitorIds.map((monitorId) => ({
+					monitors.map((monitor) => ({
 						statusPageId: id,
-						monitorId,
+						monitorId: monitor.id,
 					})),
 				);
 			}
@@ -197,10 +203,7 @@ export const deleteStatusPage = createServerFn({ method: "POST" })
 		const [deleted] = await db
 			.delete(statusPage)
 			.where(
-				and(
-					eq(statusPage.id, id),
-					eq(statusPage.organizationId, activeOrgId),
-				),
+				and(eq(statusPage.id, id), eq(statusPage.organizationId, activeOrgId)),
 			)
 			.returning({ id: statusPage.id });
 
@@ -216,7 +219,7 @@ export const getPublicStatusPage = createServerFn({ method: "GET" })
 	.inputValidator((data: unknown) => getPublicStatusPageSchema.parse(data))
 	.handler(async ({ data: { slug, password } }) => {
 		const result = await db.query.statusPage.findFirst({
-			where: and(eq(statusPage.slug, slug), password ? eq(statusPage.password, password) : undefined),
+			where: eq(statusPage.slug, slug),
 			with: {
 				monitors: {
 					with: {
@@ -236,13 +239,18 @@ export const getPublicStatusPage = createServerFn({ method: "GET" })
 			return null;
 		}
 
+		// TODO: we should hash the password in the future, but it's low risk for now
+		if (result.password && (!password || result.password !== password)) {
+			return null;
+		}
+
 		return {
 			id: result.id,
 			name: result.name,
 			slug: result.slug,
 			description: result.description,
 			customDomain: result.customDomain,
-			password: password ? true : false,
+			password: !!password,
 			createdAt: result.createdAt,
 			updatedAt: result.updatedAt,
 			monitors: result.monitors.map((m) => ({
@@ -251,4 +259,3 @@ export const getPublicStatusPage = createServerFn({ method: "GET" })
 			})),
 		};
 	});
-
