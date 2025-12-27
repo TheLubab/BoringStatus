@@ -55,6 +55,7 @@ export const getStatusPageByIdSchema = z.object({
 // Schema for getting public status page by slug
 export const getPublicStatusPageSchema = z.object({
 	slug: z.string().min(1),
+	password: z.string().optional(),
 });
 
 // Schema for deleting status page

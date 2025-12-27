@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 
 import { db } from "@/db";
 import { getSession } from "@/modules/auth/auth.api";
@@ -15,6 +15,7 @@ import {
 	getStatusPageByIdSchema,
 	updateStatusPageSchema,
 } from "./statuspages.zod";
+import { monitor } from "../monitors/monitors.schema";
 
 // Helper to ensure auth and org
 const requireAuth = async () => {
@@ -116,10 +117,19 @@ export const createStatusPage = createServerFn({ method: "POST" })
 
 			// 2. Link Monitors
 			if (monitorIds && monitorIds.length > 0) {
+				const monitors = await tx.query.monitor.findMany({
+					where: and(
+						inArray(monitor.id, monitorIds),
+						eq(monitor.organizationId, activeOrgId)
+					)
+				});
+				if (monitors.length !== monitorIds.length) {
+					throw new Error("One or more monitors not found or unauthorized");
+				}
 				await tx.insert(statusPageToMonitors).values(
-					monitorIds.map((monitorId) => ({
+					monitors.map((monitor) => ({
 						statusPageId: newStatusPage.id,
-						monitorId,
+						monitorId: monitor.id,
 					})),
 				);
 			}
@@ -204,9 +214,9 @@ export const deleteStatusPage = createServerFn({ method: "POST" })
 // GET PUBLIC STATUS PAGE (BY SLUG) - No auth required
 export const getPublicStatusPage = createServerFn({ method: "GET" })
 	.inputValidator((data: unknown) => getPublicStatusPageSchema.parse(data))
-	.handler(async ({ data: { slug } }) => {
+	.handler(async ({ data: { slug, password } }) => {
 		const result = await db.query.statusPage.findFirst({
-			where: eq(statusPage.slug, slug),
+			where: and(eq(statusPage.slug, slug), password ? eq(statusPage.password, password) : undefined),
 			with: {
 				monitors: {
 					with: {
@@ -226,14 +236,13 @@ export const getPublicStatusPage = createServerFn({ method: "GET" })
 			return null;
 		}
 
-		// Don't return sensitive information like password
 		return {
 			id: result.id,
 			name: result.name,
 			slug: result.slug,
 			description: result.description,
 			customDomain: result.customDomain,
-			// Don't return password
+			password: password ? true : false,
 			createdAt: result.createdAt,
 			updatedAt: result.updatedAt,
 			monitors: result.monitors.map((m) => ({
