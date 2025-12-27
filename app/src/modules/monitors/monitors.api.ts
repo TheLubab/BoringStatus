@@ -150,10 +150,19 @@ export const updateMonitor = createServerFn({ method: "POST" })
 
 			// B. Insert new links if provided
 			if (channelIds && channelIds.length > 0) {
+				const channels = await tx.query.notificationChannel.findMany({
+					where: and(
+						inArray(notificationChannel.id, channelIds),
+						eq(notificationChannel.organizationId, activeOrgId),
+					),
+				});
+				if (channels.length !== channelIds.length) {
+					throw new Error("One or more channels not found or unauthorized");
+				}
 				await tx.insert(monitorsToChannels).values(
-					channelIds.map((channelId) => ({
+					channels.map((channel) => ({
 						monitorId: id,
-						channelId,
+						channelId: channel.id,
 					})),
 				);
 			}
