@@ -34,17 +34,19 @@ export const tcpMetricsSchema = z.object({
 	success: z.boolean(),
 });
 
-export const heartbeatMetricsSchema = z.discriminatedUnion("type", [
-	z.object({ type: z.literal("http"), ...httpMetricsSchema.shape }),
-	z.object({ type: z.literal("ping"), ...pingMetricsSchema.shape }),
-	z.object({ type: z.literal("tcp"), ...tcpMetricsSchema.shape }),
-]);
+export const heartbeatMetricsSchema = z
+	.discriminatedUnion("type", [
+		z.object({ type: z.literal("http"), ...httpMetricsSchema.shape }),
+		z.object({ type: z.literal("ping"), ...pingMetricsSchema.shape }),
+		z.object({ type: z.literal("tcp"), ...tcpMetricsSchema.shape }),
+	])
+	.transform(({ type, ...rest }) => rest);
 
 export type HeartbeatStatus = z.infer<typeof heartbeatStatusSchema>;
 export type HttpMetrics = z.infer<typeof httpMetricsSchema>;
 export type PingMetrics = z.infer<typeof pingMetricsSchema>;
 export type TcpMetrics = z.infer<typeof tcpMetricsSchema>;
-export type HeartbeatMetrics = z.infer<typeof heartbeatMetricsSchema>;
+export type HeartbeatMetrics = HttpMetrics | PingMetrics | TcpMetrics;
 
 // API FUNCTIONS
 
