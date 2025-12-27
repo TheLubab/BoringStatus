@@ -1,7 +1,7 @@
 import { OrganizationView } from "@daveyplate/better-auth-ui"
 import { createFileRoute } from "@tanstack/react-router"
 
-export const Route = createFileRoute("/organization/$organizationView")({
+export const Route = createFileRoute("/_dashboardLayout/organization/$organizationView")({
 	component: RouteComponent
 })
 

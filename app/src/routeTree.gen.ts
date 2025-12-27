@@ -13,7 +13,6 @@ import { Route as AuthRouteRouteImport } from './routes/auth/route'
 import { Route as DashboardLayoutRouteRouteImport } from './routes/_dashboardLayout/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as StatusSlugRouteImport } from './routes/status/$slug'
-import { Route as OrganizationOrganizationViewRouteImport } from './routes/organization/$organizationView'
 import { Route as AuthTwoFactorRouteImport } from './routes/auth/two-factor'
 import { Route as AuthSignUpRouteImport } from './routes/auth/sign-up'
 import { Route as AuthSignOutRouteImport } from './routes/auth/sign-out'
@@ -25,15 +24,16 @@ import { Route as AuthForgotPasswordRouteImport } from './routes/auth/forgot-pas
 import { Route as AuthEmailOtpRouteImport } from './routes/auth/email-otp'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
 import { Route as AuthAcceptInvitationRouteImport } from './routes/auth/accept-invitation'
-import { Route as AccountAccountViewRouteImport } from './routes/account/$accountView'
 import { Route as DashboardLayoutStatusPagesIndexRouteImport } from './routes/_dashboardLayout/status-pages/index'
 import { Route as DashboardLayoutMonitorsIndexRouteImport } from './routes/_dashboardLayout/monitors/index'
 import { Route as DashboardLayoutIntegrationsIndexRouteImport } from './routes/_dashboardLayout/integrations/index'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as DashboardLayoutStatusPagesCreateRouteImport } from './routes/_dashboardLayout/status-pages/create'
 import { Route as DashboardLayoutStatusPagesStatusPageIdRouteImport } from './routes/_dashboardLayout/status-pages/$statusPageId'
+import { Route as DashboardLayoutOrganizationOrganizationViewRouteImport } from './routes/_dashboardLayout/organization/$organizationView'
 import { Route as DashboardLayoutMonitorsAddRouteImport } from './routes/_dashboardLayout/monitors/add'
 import { Route as DashboardLayoutMonitorsMonitorIdRouteImport } from './routes/_dashboardLayout/monitors/$monitorId'
+import { Route as DashboardLayoutAccountAccountViewRouteImport } from './routes/_dashboardLayout/account/$accountView'
 
 const AuthRouteRoute = AuthRouteRouteImport.update({
   id: '/auth',
@@ -54,12 +54,6 @@ const StatusSlugRoute = StatusSlugRouteImport.update({
   path: '/status/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
-const OrganizationOrganizationViewRoute =
-  OrganizationOrganizationViewRouteImport.update({
-    id: '/organization/$organizationView',
-    path: '/organization/$organizationView',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 const AuthTwoFactorRoute = AuthTwoFactorRouteImport.update({
   id: '/two-factor',
   path: '/two-factor',
@@ -115,11 +109,6 @@ const AuthAcceptInvitationRoute = AuthAcceptInvitationRouteImport.update({
   path: '/accept-invitation',
   getParentRoute: () => AuthRouteRoute,
 } as any)
-const AccountAccountViewRoute = AccountAccountViewRouteImport.update({
-  id: '/account/$accountView',
-  path: '/account/$accountView',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const DashboardLayoutStatusPagesIndexRoute =
   DashboardLayoutStatusPagesIndexRouteImport.update({
     id: '/status-pages/',
@@ -155,6 +144,12 @@ const DashboardLayoutStatusPagesStatusPageIdRoute =
     path: '/status-pages/$statusPageId',
     getParentRoute: () => DashboardLayoutRouteRoute,
   } as any)
+const DashboardLayoutOrganizationOrganizationViewRoute =
+  DashboardLayoutOrganizationOrganizationViewRouteImport.update({
+    id: '/organization/$organizationView',
+    path: '/organization/$organizationView',
+    getParentRoute: () => DashboardLayoutRouteRoute,
+  } as any)
 const DashboardLayoutMonitorsAddRoute =
   DashboardLayoutMonitorsAddRouteImport.update({
     id: '/monitors/add',
@@ -167,11 +162,16 @@ const DashboardLayoutMonitorsMonitorIdRoute =
     path: '/monitors/$monitorId',
     getParentRoute: () => DashboardLayoutRouteRoute,
   } as any)
+const DashboardLayoutAccountAccountViewRoute =
+  DashboardLayoutAccountAccountViewRouteImport.update({
+    id: '/account/$accountView',
+    path: '/account/$accountView',
+    getParentRoute: () => DashboardLayoutRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRouteRouteWithChildren
-  '/account/$accountView': typeof AccountAccountViewRoute
   '/auth/accept-invitation': typeof AuthAcceptInvitationRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/email-otp': typeof AuthEmailOtpRoute
@@ -183,10 +183,11 @@ export interface FileRoutesByFullPath {
   '/auth/sign-out': typeof AuthSignOutRoute
   '/auth/sign-up': typeof AuthSignUpRoute
   '/auth/two-factor': typeof AuthTwoFactorRoute
-  '/organization/$organizationView': typeof OrganizationOrganizationViewRoute
   '/status/$slug': typeof StatusSlugRoute
+  '/account/$accountView': typeof DashboardLayoutAccountAccountViewRoute
   '/monitors/$monitorId': typeof DashboardLayoutMonitorsMonitorIdRoute
   '/monitors/add': typeof DashboardLayoutMonitorsAddRoute
+  '/organization/$organizationView': typeof DashboardLayoutOrganizationOrganizationViewRoute
   '/status-pages/$statusPageId': typeof DashboardLayoutStatusPagesStatusPageIdRoute
   '/status-pages/create': typeof DashboardLayoutStatusPagesCreateRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -197,7 +198,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRouteRouteWithChildren
-  '/account/$accountView': typeof AccountAccountViewRoute
   '/auth/accept-invitation': typeof AuthAcceptInvitationRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/email-otp': typeof AuthEmailOtpRoute
@@ -209,10 +209,11 @@ export interface FileRoutesByTo {
   '/auth/sign-out': typeof AuthSignOutRoute
   '/auth/sign-up': typeof AuthSignUpRoute
   '/auth/two-factor': typeof AuthTwoFactorRoute
-  '/organization/$organizationView': typeof OrganizationOrganizationViewRoute
   '/status/$slug': typeof StatusSlugRoute
+  '/account/$accountView': typeof DashboardLayoutAccountAccountViewRoute
   '/monitors/$monitorId': typeof DashboardLayoutMonitorsMonitorIdRoute
   '/monitors/add': typeof DashboardLayoutMonitorsAddRoute
+  '/organization/$organizationView': typeof DashboardLayoutOrganizationOrganizationViewRoute
   '/status-pages/$statusPageId': typeof DashboardLayoutStatusPagesStatusPageIdRoute
   '/status-pages/create': typeof DashboardLayoutStatusPagesCreateRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -225,7 +226,6 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_dashboardLayout': typeof DashboardLayoutRouteRouteWithChildren
   '/auth': typeof AuthRouteRouteWithChildren
-  '/account/$accountView': typeof AccountAccountViewRoute
   '/auth/accept-invitation': typeof AuthAcceptInvitationRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/email-otp': typeof AuthEmailOtpRoute
@@ -237,10 +237,11 @@ export interface FileRoutesById {
   '/auth/sign-out': typeof AuthSignOutRoute
   '/auth/sign-up': typeof AuthSignUpRoute
   '/auth/two-factor': typeof AuthTwoFactorRoute
-  '/organization/$organizationView': typeof OrganizationOrganizationViewRoute
   '/status/$slug': typeof StatusSlugRoute
+  '/_dashboardLayout/account/$accountView': typeof DashboardLayoutAccountAccountViewRoute
   '/_dashboardLayout/monitors/$monitorId': typeof DashboardLayoutMonitorsMonitorIdRoute
   '/_dashboardLayout/monitors/add': typeof DashboardLayoutMonitorsAddRoute
+  '/_dashboardLayout/organization/$organizationView': typeof DashboardLayoutOrganizationOrganizationViewRoute
   '/_dashboardLayout/status-pages/$statusPageId': typeof DashboardLayoutStatusPagesStatusPageIdRoute
   '/_dashboardLayout/status-pages/create': typeof DashboardLayoutStatusPagesCreateRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -253,7 +254,6 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
-    | '/account/$accountView'
     | '/auth/accept-invitation'
     | '/auth/callback'
     | '/auth/email-otp'
@@ -265,10 +265,11 @@ export interface FileRouteTypes {
     | '/auth/sign-out'
     | '/auth/sign-up'
     | '/auth/two-factor'
-    | '/organization/$organizationView'
     | '/status/$slug'
+    | '/account/$accountView'
     | '/monitors/$monitorId'
     | '/monitors/add'
+    | '/organization/$organizationView'
     | '/status-pages/$statusPageId'
     | '/status-pages/create'
     | '/api/auth/$'
@@ -279,7 +280,6 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
-    | '/account/$accountView'
     | '/auth/accept-invitation'
     | '/auth/callback'
     | '/auth/email-otp'
@@ -291,10 +291,11 @@ export interface FileRouteTypes {
     | '/auth/sign-out'
     | '/auth/sign-up'
     | '/auth/two-factor'
-    | '/organization/$organizationView'
     | '/status/$slug'
+    | '/account/$accountView'
     | '/monitors/$monitorId'
     | '/monitors/add'
+    | '/organization/$organizationView'
     | '/status-pages/$statusPageId'
     | '/status-pages/create'
     | '/api/auth/$'
@@ -306,7 +307,6 @@ export interface FileRouteTypes {
     | '/'
     | '/_dashboardLayout'
     | '/auth'
-    | '/account/$accountView'
     | '/auth/accept-invitation'
     | '/auth/callback'
     | '/auth/email-otp'
@@ -318,10 +318,11 @@ export interface FileRouteTypes {
     | '/auth/sign-out'
     | '/auth/sign-up'
     | '/auth/two-factor'
-    | '/organization/$organizationView'
     | '/status/$slug'
+    | '/_dashboardLayout/account/$accountView'
     | '/_dashboardLayout/monitors/$monitorId'
     | '/_dashboardLayout/monitors/add'
+    | '/_dashboardLayout/organization/$organizationView'
     | '/_dashboardLayout/status-pages/$statusPageId'
     | '/_dashboardLayout/status-pages/create'
     | '/api/auth/$'
@@ -334,8 +335,6 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DashboardLayoutRouteRoute: typeof DashboardLayoutRouteRouteWithChildren
   AuthRouteRoute: typeof AuthRouteRouteWithChildren
-  AccountAccountViewRoute: typeof AccountAccountViewRoute
-  OrganizationOrganizationViewRoute: typeof OrganizationOrganizationViewRoute
   StatusSlugRoute: typeof StatusSlugRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
@@ -368,13 +367,6 @@ declare module '@tanstack/react-router' {
       path: '/status/$slug'
       fullPath: '/status/$slug'
       preLoaderRoute: typeof StatusSlugRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/organization/$organizationView': {
-      id: '/organization/$organizationView'
-      path: '/organization/$organizationView'
-      fullPath: '/organization/$organizationView'
-      preLoaderRoute: typeof OrganizationOrganizationViewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/two-factor': {
@@ -454,13 +446,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthAcceptInvitationRouteImport
       parentRoute: typeof AuthRouteRoute
     }
-    '/account/$accountView': {
-      id: '/account/$accountView'
-      path: '/account/$accountView'
-      fullPath: '/account/$accountView'
-      preLoaderRoute: typeof AccountAccountViewRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/_dashboardLayout/status-pages/': {
       id: '/_dashboardLayout/status-pages/'
       path: '/status-pages'
@@ -503,6 +488,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardLayoutStatusPagesStatusPageIdRouteImport
       parentRoute: typeof DashboardLayoutRouteRoute
     }
+    '/_dashboardLayout/organization/$organizationView': {
+      id: '/_dashboardLayout/organization/$organizationView'
+      path: '/organization/$organizationView'
+      fullPath: '/organization/$organizationView'
+      preLoaderRoute: typeof DashboardLayoutOrganizationOrganizationViewRouteImport
+      parentRoute: typeof DashboardLayoutRouteRoute
+    }
     '/_dashboardLayout/monitors/add': {
       id: '/_dashboardLayout/monitors/add'
       path: '/monitors/add'
@@ -517,12 +509,21 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardLayoutMonitorsMonitorIdRouteImport
       parentRoute: typeof DashboardLayoutRouteRoute
     }
+    '/_dashboardLayout/account/$accountView': {
+      id: '/_dashboardLayout/account/$accountView'
+      path: '/account/$accountView'
+      fullPath: '/account/$accountView'
+      preLoaderRoute: typeof DashboardLayoutAccountAccountViewRouteImport
+      parentRoute: typeof DashboardLayoutRouteRoute
+    }
   }
 }
 
 interface DashboardLayoutRouteRouteChildren {
+  DashboardLayoutAccountAccountViewRoute: typeof DashboardLayoutAccountAccountViewRoute
   DashboardLayoutMonitorsMonitorIdRoute: typeof DashboardLayoutMonitorsMonitorIdRoute
   DashboardLayoutMonitorsAddRoute: typeof DashboardLayoutMonitorsAddRoute
+  DashboardLayoutOrganizationOrganizationViewRoute: typeof DashboardLayoutOrganizationOrganizationViewRoute
   DashboardLayoutStatusPagesStatusPageIdRoute: typeof DashboardLayoutStatusPagesStatusPageIdRoute
   DashboardLayoutStatusPagesCreateRoute: typeof DashboardLayoutStatusPagesCreateRoute
   DashboardLayoutIntegrationsIndexRoute: typeof DashboardLayoutIntegrationsIndexRoute
@@ -531,8 +532,12 @@ interface DashboardLayoutRouteRouteChildren {
 }
 
 const DashboardLayoutRouteRouteChildren: DashboardLayoutRouteRouteChildren = {
+  DashboardLayoutAccountAccountViewRoute:
+    DashboardLayoutAccountAccountViewRoute,
   DashboardLayoutMonitorsMonitorIdRoute: DashboardLayoutMonitorsMonitorIdRoute,
   DashboardLayoutMonitorsAddRoute: DashboardLayoutMonitorsAddRoute,
+  DashboardLayoutOrganizationOrganizationViewRoute:
+    DashboardLayoutOrganizationOrganizationViewRoute,
   DashboardLayoutStatusPagesStatusPageIdRoute:
     DashboardLayoutStatusPagesStatusPageIdRoute,
   DashboardLayoutStatusPagesCreateRoute: DashboardLayoutStatusPagesCreateRoute,
@@ -580,8 +585,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DashboardLayoutRouteRoute: DashboardLayoutRouteRouteWithChildren,
   AuthRouteRoute: AuthRouteRouteWithChildren,
-  AccountAccountViewRoute: AccountAccountViewRoute,
-  OrganizationOrganizationViewRoute: OrganizationOrganizationViewRoute,
   StatusSlugRoute: StatusSlugRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
