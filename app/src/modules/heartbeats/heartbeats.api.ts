@@ -21,11 +21,18 @@ const requireAuth = async () => {
 	return activeOrgId;
 };
 
+// TODO: move to apikeys.service or somewhere better
 /**
  * Validates API key from Authorization header and returns the organization ID
  * Expects: Authorization: Bearer <API_KEY>
+ * Returns: organizationId for organization keys, null for system/master keys
  */
-const requireApiKey = async (): Promise<string> => {
+const requireApiKey = async (
+	requiredScope?: string,
+): Promise<{
+	organizationId: string | null;
+	scopes: string[];
+}> => {
 	const headers = getRequestHeaders();
 	const authHeader =
 		headers.get("authorization") || headers.get("Authorization");
@@ -36,7 +43,7 @@ const requireApiKey = async (): Promise<string> => {
 		);
 	}
 
-	const apiKeyValue = authHeader.substring(7).trim(); // Remove "Bearer " prefix
+	const apiKeyValue = authHeader.substring(7).trim();
 
 	if (!apiKeyValue) {
 		throw new Error("Unauthorized: API key is required");
@@ -45,47 +52,68 @@ const requireApiKey = async (): Promise<string> => {
 	// Look up the API key in the database
 	const keyRecord = await db.query.apiKey.findFirst({
 		where: and(eq(apiKey.key, apiKeyValue), eq(apiKey.isActive, true)),
-		columns: { id: true, organizationId: true },
+		columns: { id: true, organizationId: true, scopes: true },
 	});
 
 	if (!keyRecord) {
 		throw new Error("Unauthorized: Invalid or inactive API key");
 	}
 
+	// For system keys (null organizationId), require explicit scope to prevent accidental misuse
+	// Organization keys are already scoped by their organization, so scope check is optional
 	if (!keyRecord.organizationId) {
-		throw new Error(
-			"Unauthorized: API key is not associated with an organization",
-		);
+		if (!requiredScope) {
+			throw new Error(
+				"Unauthorized: System keys require explicit scope validation for security",
+			);
+		}
+		const scopes = keyRecord.scopes || [];
+		if (!scopes.includes(requiredScope)) {
+			throw new Error(
+				`Unauthorized: System API key missing required scope: ${requiredScope}`,
+			);
+		}
+	} else if (requiredScope) {
+		const scopes = keyRecord.scopes || [];
+		if (!scopes.includes(requiredScope)) {
+			throw new Error(
+				`Unauthorized: API key missing required scope: ${requiredScope}`,
+			);
+		}
 	}
 
-	// Update last used timestamp
-	await db
-		.update(apiKey)
-		.set({ lastUsedAt: new Date() })
-		.where(eq(apiKey.id, keyRecord.id));
-
-	return keyRecord.organizationId;
+	return {
+		organizationId: keyRecord.organizationId ?? null,
+		scopes: keyRecord.scopes || [],
+	};
 };
 
 // RECORD HEARTBEAT
 // Protected by API key authentication (Bearer token)
+// System keys require "heartbeat:write" scope for security
 export const recordHeartbeat = createServerFn({ method: "POST" })
 	.inputValidator((data: unknown) => insertHeartbeatSchema.parse(data))
 	.handler(async ({ data }) => {
-		const organizationId = await requireApiKey();
+		const { organizationId } = await requireApiKey("heartbeat:write");
 
 		return await db.transaction(async (tx) => {
-			// 1. Fetch monitor and verify ownership
+			// 1. Fetch monitor and verify ownership (if org key) or existence (if system key)
 			const monitorRecord = await tx.query.monitor.findFirst({
-				where: and(
-					eq(monitor.id, data.monitorId),
-					eq(monitor.organizationId, organizationId),
-				),
+				where: organizationId
+					? and(
+						eq(monitor.id, data.monitorId),
+						eq(monitor.organizationId, organizationId),
+					)
+					: eq(monitor.id, data.monitorId),
 				columns: { frequency: true, organizationId: true },
 			});
 
 			if (!monitorRecord) {
-				throw new Error("Monitor not found or unauthorized");
+				throw new Error(
+					organizationId
+						? "Monitor not found or unauthorized"
+						: "Monitor not found",
+				);
 			}
 
 			// 2. Insert the Heartbeat
