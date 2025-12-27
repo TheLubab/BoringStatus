@@ -1,5 +1,6 @@
 import type { User } from "better-auth";
 import { Menu } from "lucide-react";
+
 import {
 	Drawer,
 	DrawerClose,
@@ -7,6 +8,7 @@ import {
 	DrawerFooter,
 	DrawerTrigger,
 } from "@/components/ui/drawer";
+
 import { BrandLogo } from "./brand-logo";
 import { MobileNavigation } from "./mobile-navigation";
 import { Navigation } from "./navigation";

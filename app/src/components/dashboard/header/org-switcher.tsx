@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import type { Organization } from "better-auth/plugins";
 import { ArrowUpCircle, ChevronsUpDown, Plus, Settings } from "lucide-react";
 import React, { useEffect, useState } from "react";
+
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -12,12 +13,12 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
-import { authClient } from "@/lib/auth/auth-client";
+import { cn } from "@/lib/utils";
+import { authClient } from "@/modules/auth/auth.client";
 import {
 	useActiveOrganization,
 	useListOrganizations,
-} from "@/lib/auth/auth-hooks";
-import { cn } from "@/lib/utils";
+} from "@/modules/auth/auth.hooks";
 
 export function OrgSwitcher({ triggerProps }: { triggerProps?: any }) {
 	// 1. Fetch Data
