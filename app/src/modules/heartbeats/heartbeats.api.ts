@@ -24,10 +24,18 @@ const requireAuth = async () => {
 export const recordHeartbeat = createServerFn({ method: "POST" })
 	.inputValidator((data: unknown) => insertHeartbeatSchema.parse(data))
 	.handler(async ({ data }) => {
-		await requireAuth();
-
 		return await db.transaction(async (tx) => {
-			// 1. Insert the Heartbeat
+			// 1. Fetch monitor to get current frequency value
+			const monitorRecord = await tx.query.monitor.findFirst({
+				where: eq(monitor.id, data.monitorId),
+				columns: { frequency: true },
+			});
+
+			if (!monitorRecord) {
+				throw new Error("Monitor not found");
+			}
+
+			// 2. Insert the Heartbeat
 			const [newHeartbeat] = await tx
 				.insert(heartbeat)
 				.values({
@@ -36,13 +44,13 @@ export const recordHeartbeat = createServerFn({ method: "POST" })
 				})
 				.returning();
 
-			// 2. Update the Parent Monitor State (Cache)
+			// 3. Update the Parent Monitor State (Cache)
 			await tx
 				.update(monitor)
 				.set({
 					status: data.status,
 					lastCheckAt: newHeartbeat.time,
-					nextCheckAt: sql`NOW() + INTERVAL '1 second' * ${monitor.frequency}`,
+					nextCheckAt: sql`NOW() + INTERVAL '1 second' * ${monitorRecord.frequency}`,
 				})
 				.where(eq(monitor.id, data.monitorId));
 
