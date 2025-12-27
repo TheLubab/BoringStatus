@@ -52,8 +52,8 @@ export const createMonitor = createServerFn({ method: "POST" })
 				const channels = await tx.query.notificationChannel.findMany({
 					where: and(
 						inArray(notificationChannel.id, channelIds),
-						eq(notificationChannel.organizationId, activeOrgId)
-					)
+						eq(notificationChannel.organizationId, activeOrgId),
+					),
 				});
 				if (channels.length !== channelIds.length) {
 					throw new Error("One or more channels not found or unauthorized");
