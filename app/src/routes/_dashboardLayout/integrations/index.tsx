@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+
 import { IntegrationsManager } from "@/components/channels/integrations-manager";
 
 export const Route = createFileRoute("/_dashboardLayout/integrations/")({
@@ -19,5 +20,5 @@ function IntegrationsPage() {
 
 			<IntegrationsManager />
 		</div>
-	)
+	);
 }

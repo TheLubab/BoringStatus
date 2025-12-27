@@ -1,16 +1,16 @@
+import { SiDiscord, SiSlack, SiTelegram } from "@icons-pack/react-simple-icons";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AlertCircle, LucideMail, Trash2, Webhook } from "lucide-react";
 import { toast } from "sonner";
-import { SiDiscord, SiSlack, SiTelegram } from "@icons-pack/react-simple-icons";
-import { deleteChannel } from "@/functions/channels";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import type { Channel } from "@/functions/channels";
+import type { NotificationChannel } from "@/db/schema";
 import { cn } from "@/lib/utils";
+import { deleteChannel } from "@/modules/integrations/integrations.api";
 
 interface ChannelListProps {
-	channels: Channel[];
+	channels: NotificationChannel[];
 	selectedIds?: string[];
 	onSelectionChange?: (ids: string[]) => void;
 	allowDelete?: boolean;
@@ -145,8 +145,10 @@ export function ChannelList({
 								onClick={(e) => {
 									e.stopPropagation();
 									e.preventDefault();
-									if (confirm("Are you sure you want to remove this channel?")) {
-										deleteMutation.mutate({ data: channel.id });
+									if (
+										confirm("Are you sure you want to remove this channel?")
+									) {
+										deleteMutation.mutate({ data: { id: channel.id } });
 									}
 								}}
 							>

@@ -1,9 +1,10 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
+
 import { MonitorsTable } from "@/components/monitors/table/monitor-table";
 import { Button } from "@/components/ui/button";
-import { getMonitorsData } from "@/functions/monitor";
+import { getMonitorsByOrg } from "@/modules/monitors/monitors.api";
 
 export const Route = createFileRoute("/_dashboardLayout/monitors/")({
 	component: MonitorsPage,
@@ -12,7 +13,7 @@ export const Route = createFileRoute("/_dashboardLayout/monitors/")({
 function MonitorsPage() {
 	const { data } = useSuspenseQuery({
 		queryKey: ["monitors"],
-		queryFn: () => getMonitorsData(),
+		queryFn: () => getMonitorsByOrg(),
 	});
 
 	const router = useRouter();

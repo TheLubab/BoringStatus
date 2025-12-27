@@ -1,43 +1,33 @@
-import React from "react";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
-import { authMiddleware } from "@/lib/auth/auth-middleware";
 import {
-	ArrowLeft,
 	Activity,
-	CheckCircle2,
-	XCircle,
 	AlertTriangle,
+	ArrowLeft,
+	CheckCircle2,
 	Clock,
+	ExternalLink,
 	Globe,
+	History,
+	MoreVertical,
 	PauseCircle,
 	PlayCircle,
+	Settings,
 	Trash2,
-	MoreVertical,
-	ExternalLink,
-	History,
-	Settings
+	XCircle,
 } from "lucide-react";
 import {
-	AreaChart,
 	Area,
+	AreaChart,
+	CartesianGrid,
+	ResponsiveContainer,
+	Tooltip,
 	XAxis,
 	YAxis,
-	CartesianGrid,
-	Tooltip,
-	ResponsiveContainer,
 } from "recharts";
+import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuTrigger,
-	DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
+import { MonitorEditForm } from "@/components/monitors/edit/monitor-edit-form";
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -49,25 +39,35 @@ import {
 	AlertDialogTitle,
 	AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
-	getMonitorDetails,
-	deleteMonitor,
-	toggleMonitorActive
-} from "@/functions/monitor";
-import { MonitorEditForm } from "@/components/monitors/edit/monitor-edit-form";
-import { toast } from "sonner";
+	Card,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from "@/components/ui/card";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuSeparator,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
+import {
+	deleteMonitor,
+	getMonitorById,
+	toggleMonitorActive,
+} from "@/modules/monitors/monitors.api";
 
 // ----------------------------------------------------------------------
 // 1. ROUTE DEFINITION
 // ----------------------------------------------------------------------
 export const Route = createFileRoute("/_dashboardLayout/monitors/$monitorId")({
 	component: MonitorDetailsPage,
-	server: {
-		middleware: [authMiddleware],
-	},
 });
 
 // ----------------------------------------------------------------------
@@ -80,7 +80,7 @@ function MonitorDetailsPage() {
 	// 1. Fetch Real Data
 	const { data } = useSuspenseQuery({
 		queryKey: ["monitor", monitorId],
-		queryFn: () => getMonitorDetails({ data: { monitorId } }),
+		queryFn: () => getMonitorById({ data: { id: monitorId } }),
 	});
 
 	const { monitor, chart, recentChecks, stats, connectedValue } = data;
@@ -91,7 +91,7 @@ function MonitorDetailsPage() {
 	const handleToggleActive = async () => {
 		try {
 			await toggleMonitorActive({
-				data: { monitorId: monitor.id, active: !isActive }
+				data: { id: monitor.id, active: !isActive },
 			});
 			toast.success(isActive ? "Monitor paused" : "Monitor resumed");
 			router.invalidate();
@@ -102,7 +102,7 @@ function MonitorDetailsPage() {
 
 	const handleDelete = async () => {
 		try {
-			await deleteMonitor({ data: { monitorId: monitor.id } });
+			await deleteMonitor({ data: { id: monitor.id } });
 			toast.success("Monitor deleted");
 			router.navigate({ to: "/monitors" });
 		} catch (e) {
@@ -112,12 +112,14 @@ function MonitorDetailsPage() {
 
 	return (
 		<div className="space-y-6 animate-in fade-in duration-500 max-w-7xl mx-auto pb-20">
-
 			{/* --- HEADER --- */}
 			<div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between border-b pb-6">
 				<div className="space-y-2">
 					<div className="flex items-center gap-2 text-sm text-muted-foreground">
-						<Link to="/monitors" className="hover:text-foreground flex items-center gap-1 transition-colors">
+						<Link
+							to="/monitors"
+							className="hover:text-foreground flex items-center gap-1 transition-colors"
+						>
 							<ArrowLeft className="h-4 w-4" /> Monitors
 						</Link>
 						<span>/</span>
@@ -125,7 +127,9 @@ function MonitorDetailsPage() {
 					</div>
 
 					<div className="flex items-center gap-4 flex-wrap">
-						<h1 className="text-3xl font-bold tracking-tight">{monitor.name}</h1>
+						<h1 className="text-3xl font-bold tracking-tight">
+							{monitor.name}
+						</h1>
 						<StatusBadge status={monitor.status || "pending"} />
 						{!isActive && (
 							<Badge variant="secondary" className="text-muted-foreground">
@@ -158,7 +162,11 @@ function MonitorDetailsPage() {
 					<Button
 						variant="outline"
 						onClick={handleToggleActive}
-						className={cn(isActive ? "hover:bg-amber-50 hover:text-amber-600 hover:border-amber-200" : "hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200")}
+						className={cn(
+							isActive
+								? "hover:bg-amber-50 hover:text-amber-600 hover:border-amber-200"
+								: "hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200",
+						)}
 					>
 						{isActive ? (
 							<>
@@ -184,21 +192,31 @@ function MonitorDetailsPage() {
 							<DropdownMenuSeparator />
 							<AlertDialog>
 								<AlertDialogTrigger asChild>
-									<DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-red-600 focus:text-red-700 focus:bg-red-50">
+									<DropdownMenuItem
+										onSelect={(e) => e.preventDefault()}
+										className="text-red-600 focus:text-red-700 focus:bg-red-50"
+									>
 										<Trash2 className="mr-2 h-4 w-4" /> Delete Monitor
 									</DropdownMenuItem>
 								</AlertDialogTrigger>
 								<AlertDialogContent>
 									<AlertDialogHeader>
-										<AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+										<AlertDialogTitle>
+											Are you absolutely sure?
+										</AlertDialogTitle>
 										<AlertDialogDescription>
-											This action cannot be undone. This will permanently delete the monitor
-											<strong> {monitor.name}</strong> and remove all its history.
+											This action cannot be undone. This will permanently delete
+											the monitor
+											<strong> {monitor.name}</strong> and remove all its
+											history.
 										</AlertDialogDescription>
 									</AlertDialogHeader>
 									<AlertDialogFooter>
 										<AlertDialogCancel>Cancel</AlertDialogCancel>
-										<AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700 text-white">
+										<AlertDialogAction
+											onClick={handleDelete}
+											className="bg-red-600 hover:bg-red-700 text-white"
+										>
 											Delete
 										</AlertDialogAction>
 									</AlertDialogFooter>
@@ -222,14 +240,22 @@ function MonitorDetailsPage() {
 
 				{/* === OVERVIEW TAB === */}
 				<TabsContent value="overview" className="space-y-6">
-
 					{/* METRICS GRID */}
 					<div className="grid gap-4 md:grid-cols-4">
 						<StatsCard
 							title="Current Status"
 							value={(monitor.status || "pending").toUpperCase()}
-							sub={recentChecks[0]?.time ? new Date(recentChecks[0].time).toLocaleString() : "Never"}
-							icon={<StatusIcon status={monitor.status || "pending"} className="h-4 w-4" />}
+							sub={
+								recentChecks[0]?.time
+									? new Date(recentChecks[0].time).toLocaleString()
+									: "Never"
+							}
+							icon={
+								<StatusIcon
+									status={monitor.status || "pending"}
+									className="h-4 w-4"
+								/>
+							}
 						/>
 						<StatsCard
 							title="Avg. Latency"
@@ -262,14 +288,35 @@ function MonitorDetailsPage() {
 						<CardContent className="pl-0">
 							<div className="h-[350px] w-full">
 								<ResponsiveContainer width="100%" height="100%">
-									<AreaChart data={chart} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+									<AreaChart
+										data={chart}
+										margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+									>
 										<defs>
-											<linearGradient id="colorLatency" x1="0" y1="0" x2="0" y2="1">
-												<stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
-												<stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+											<linearGradient
+												id="colorLatency"
+												x1="0"
+												y1="0"
+												x2="0"
+												y2="1"
+											>
+												<stop
+													offset="5%"
+													stopColor="#10b981"
+													stopOpacity={0.3}
+												/>
+												<stop
+													offset="95%"
+													stopColor="#10b981"
+													stopOpacity={0}
+												/>
 											</linearGradient>
 										</defs>
-										<CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+										<CartesianGrid
+											strokeDasharray="3 3"
+											vertical={false}
+											stroke="#f0f0f0"
+										/>
 										<XAxis
 											dataKey="time"
 											stroke="#888888"
@@ -284,18 +331,21 @@ function MonitorDetailsPage() {
 											tickLine={false}
 											axisLine={false}
 											tickFormatter={(value) => `${value}ms`}
-											domain={[0, 'auto']}
+											domain={[0, "auto"]}
 										/>
 										<Tooltip
 											contentStyle={{
-												backgroundColor: 'var(--background)',
-												borderRadius: '8px',
-												border: '1px solid var(--border)',
-												boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+												backgroundColor: "var(--background)",
+												borderRadius: "8px",
+												border: "1px solid var(--border)",
+												boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
 											}}
-											itemStyle={{ color: 'var(--foreground)' }}
-											formatter={(value: any) => [`${value}ms`, 'Latency']}
-											labelStyle={{ color: 'var(--muted-foreground)', marginBottom: '0.5rem' }}
+											itemStyle={{ color: "var(--foreground)" }}
+											formatter={(value: any) => [`${value}ms`, "Latency"]}
+											labelStyle={{
+												color: "var(--muted-foreground)",
+												marginBottom: "0.5rem",
+											}}
 										/>
 										<Area
 											type="monotone"
@@ -320,32 +370,54 @@ function MonitorDetailsPage() {
 									<History className="w-5 h-5 text-muted-foreground" />
 									Recent Checks
 								</CardTitle>
-								<CardDescription>Latest heartbeat logs from our global runners</CardDescription>
+								<CardDescription>
+									Latest heartbeat logs from our global runners
+								</CardDescription>
 							</div>
 						</CardHeader>
 						<CardContent>
 							<div className="space-y-1">
 								{recentChecks.length === 0 ? (
-									<div className="text-center py-8 text-muted-foreground">No checks recorded yet.</div>
+									<div className="text-center py-8 text-muted-foreground">
+										No checks recorded yet.
+									</div>
 								) : (
 									recentChecks.map((check, i) => (
-										<div key={i} className="flex items-center justify-between py-3 border-b last:border-0 hover:bg-muted/30 px-2 rounded-md transition-colors">
+										<div
+											key={i}
+											className="flex items-center justify-between py-3 border-b last:border-0 hover:bg-muted/30 px-2 rounded-md transition-colors"
+										>
 											<div className="flex items-center gap-4">
-												<div className={cn(
-													"flex h-8 w-8 items-center justify-center rounded-full border",
-													check.status === "up"
-														? "bg-emerald-50 text-emerald-600 border-emerald-100"
-														: "bg-red-50 text-red-600 border-red-100"
-												)}>
-													{check.status === "up" ? <CheckCircle2 className="h-4 w-4" /> : <AlertTriangle className="h-4 w-4" />}
+												<div
+													className={cn(
+														"flex h-8 w-8 items-center justify-center rounded-full border",
+														check.status === "up"
+															? "bg-emerald-50 text-emerald-600 border-emerald-100"
+															: "bg-red-50 text-red-600 border-red-100",
+													)}
+												>
+													{check.status === "up" ? (
+														<CheckCircle2 className="h-4 w-4" />
+													) : (
+														<AlertTriangle className="h-4 w-4" />
+													)}
 												</div>
 												<div>
 													<p className="text-sm font-medium flex items-center gap-2">
-														<span className={check.status === "up" ? "text-emerald-700" : "text-red-700"}>
+														<span
+															className={
+																check.status === "up"
+																	? "text-emerald-700"
+																	: "text-red-700"
+															}
+														>
 															{check.status.toUpperCase()}
 														</span>
 														{check.statusCode && (
-															<Badge variant="outline" className="text-[10px] h-5 px-1.5 font-mono">
+															<Badge
+																variant="outline"
+																className="text-[10px] h-5 px-1.5 font-mono"
+															>
 																{check.statusCode}
 															</Badge>
 														)}
@@ -357,7 +429,10 @@ function MonitorDetailsPage() {
 											</div>
 											<div className="flex items-center gap-6">
 												{check.message && (
-													<span className="text-xs text-muted-foreground max-w-[200px] truncate hidden md:inline-block" title={check.message}>
+													<span
+														className="text-xs text-muted-foreground max-w-[200px] truncate hidden md:inline-block"
+														title={check.message}
+													>
 														{check.message}
 													</span>
 												)}
@@ -371,22 +446,33 @@ function MonitorDetailsPage() {
 							</div>
 						</CardContent>
 					</Card>
-
 				</TabsContent>
 
 				{/* === CONFIGURATION TAB === */}
 				<TabsContent value="configuration">
-					<MonitorEditForm monitor={monitor} connectedChannelIds={connectedValue} />
+					<MonitorEditForm
+						monitor={monitor}
+						connectedChannelIds={connectedValue}
+					/>
 				</TabsContent>
 			</Tabs>
-
 		</div>
 	);
 }
 
 // --- SUBCOMPONENTS ---
 
-function StatsCard({ title, value, sub, icon }: { title: string, value: string, sub: string, icon: React.ReactNode }) {
+function StatsCard({
+	title,
+	value,
+	sub,
+	icon,
+}: {
+	title: string;
+	value: string;
+	sub: string;
+	icon: React.ReactNode;
+}) {
 	return (
 		<Card>
 			<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -397,19 +483,18 @@ function StatsCard({ title, value, sub, icon }: { title: string, value: string, 
 			</CardHeader>
 			<CardContent>
 				<div className="text-2xl font-bold">{value}</div>
-				<p className="text-xs text-muted-foreground mt-1">
-					{sub}
-				</p>
+				<p className="text-xs text-muted-foreground mt-1">{sub}</p>
 			</CardContent>
 		</Card>
-	)
+	);
 }
 
 function StatusBadge({ status }: { status: string }) {
 	const styles = {
 		up: "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100",
 		down: "bg-red-50 text-red-700 border-red-200 hover:bg-red-100",
-		maintenance: "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100",
+		maintenance:
+			"bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100",
 		pending: "bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100",
 	};
 
@@ -423,16 +508,28 @@ function StatusBadge({ status }: { status: string }) {
 	const s = status as keyof typeof styles;
 
 	return (
-		<Badge variant="outline" className={`px-3 py-1 text-sm font-medium transition-colors ${styles[s] || styles.pending}`}>
+		<Badge
+			variant="outline"
+			className={`px-3 py-1 text-sm font-medium transition-colors ${styles[s] || styles.pending}`}
+		>
 			{icons[s] || icons.pending}
 			{status ? status.charAt(0).toUpperCase() + status.slice(1) : "Unknown"}
 		</Badge>
 	);
 }
 
-function StatusIcon({ status, className }: { status: string, className?: string }) {
-	if (status === 'up') return <CheckCircle2 className={cn("text-emerald-500", className)} />;
-	if (status === 'down') return <XCircle className={cn("text-red-500", className)} />;
-	if (status === 'maintenance') return <AlertTriangle className={cn("text-amber-500", className)} />;
+function StatusIcon({
+	status,
+	className,
+}: {
+	status: string;
+	className?: string;
+}) {
+	if (status === "up")
+		return <CheckCircle2 className={cn("text-emerald-500", className)} />;
+	if (status === "down")
+		return <XCircle className={cn("text-red-500", className)} />;
+	if (status === "maintenance")
+		return <AlertTriangle className={cn("text-amber-500", className)} />;
 	return <Activity className={cn("text-gray-500", className)} />;
 }

@@ -16,6 +16,7 @@ import {
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+
 import { ProBadge } from "@/components/saas/pro-badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -41,15 +42,16 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-	insertNotificationChannelSchema,
-	type NotificationChannelFormValues,
-} from "@/db/zod";
-import { createChannel } from "@/functions/channels";
 import { cn } from "@/lib/utils";
+import type { NotificationChannel } from "@/db/schema";
+import { createChannel } from "@/modules/integrations/integrations.api";
+import {
+	InsertNotificationChannel,
+	insertNotificationChannelSchema,
+} from "@/modules/integrations/integrations.zod";
 
 interface ChannelAddDialogProps {
-	onSuccess?: (channel: NotificationChannelFormValues & { id: string }) => void;
+	onSuccess?: (channel: NotificationChannel & { id: string }) => void;
 	children?: React.ReactNode;
 	allowPro?: boolean;
 }
@@ -121,7 +123,7 @@ export function ChannelAddDialog({
 }
 
 interface ChannelAddFormProps {
-	onChannelCreate: (channel: NotificationChannelFormValues) => void;
+	onChannelCreate: (channel: NotificationChannel) => void;
 	allowPro?: boolean;
 	onClose: () => void;
 }
@@ -139,7 +141,7 @@ export function ChannelAddForm({
 	const [copied, setCopied] = useState(false);
 	const [exampleOpen, setExampleOpen] = useState(false);
 
-	const form = useForm<NotificationChannelFormValues>({
+	const form = useForm<InsertNotificationChannel>({
 		resolver: zodResolver(insertNotificationChannelSchema),
 		defaultValues: {
 			name: "",

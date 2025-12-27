@@ -1,17 +1,18 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
+
 import { DashboardFrame } from "@/components/dashboard/dashboard-frame";
 import { DashboardHeader } from "@/components/dashboard/header/header";
-import { getSessionFn } from "@/functions/get-session";
-import { authMiddleware } from "@/lib/auth/auth-middleware";
+import { getSession } from "@/modules/auth/auth.api";
+import { requireAuthMiddleware } from "@/modules/auth/auth.middleware";
 
 export const Route = createFileRoute("/_dashboardLayout")({
 	component: DashboardLayout,
 	server: {
-		middleware: [authMiddleware],
+		middleware: [requireAuthMiddleware],
 	},
 	loader: async () => {
 		return {
-			session: await getSessionFn(),
+			session: await getSession(),
 		};
 	},
 });

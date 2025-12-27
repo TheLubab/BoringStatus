@@ -10,11 +10,9 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-	getChannels,
-} from "@/functions/channels";
 import { ChannelAddDialog } from "./channel-add-dialog";
 import { ChannelList } from "./channel-list";
+import { getNotificationChannelsByOrg } from "@/modules/integrations/integrations.api";
 
 export function IntegrationsManager() {
 	const {
@@ -24,7 +22,7 @@ export function IntegrationsManager() {
 		refetch,
 	} = useQuery({
 		queryKey: ["channels"],
-		queryFn: getChannels,
+		queryFn: getNotificationChannelsByOrg,
 	});
 
 	if (isLoading) {
@@ -120,10 +118,7 @@ export function IntegrationsManager() {
 					</div>
 				) : (
 					<div className="p-4">
-						<ChannelList
-							channels={channels}
-							allowDelete
-						/>
+						<ChannelList channels={channels} allowDelete />
 					</div>
 				)}
 			</div>

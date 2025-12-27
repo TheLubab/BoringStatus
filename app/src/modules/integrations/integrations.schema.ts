@@ -43,3 +43,5 @@ export const notificationChannelRelations = relations(
 		monitors: many(monitorsToChannels),
 	}),
 );
+
+export type NotificationChannel = typeof notificationChannel.$inferSelect;
