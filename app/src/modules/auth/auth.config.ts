@@ -3,13 +3,15 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { organization } from "better-auth/plugins";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
 import { asc, desc, eq } from "drizzle-orm";
+
 import { db } from "@/db";
 import { env } from "@/env.ts";
 import { randomStr, slugify } from "@/lib/utils";
-import * as authSchema from "./auth-schema";
+
+import * as authSchema from "./auth.schema";
 
 export const auth = betterAuth({
-	trustedOrigins: [
+	trustedOrigins: env.TRUSTED_AUTH_ORIGINS ?? [
 		"http://localhost:3000",
 		"https://localhost:3000",
 		"http://boringstatus.local",
