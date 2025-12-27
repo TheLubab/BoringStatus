@@ -5,36 +5,15 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1765783362271,
-      "tag": "0000_flimsy_captain_america",
+      "when": 1766854455195,
+      "tag": "0000_damp_frightful_four",
       "breakpoints": true
     },
     {
       "idx": 1,
       "version": "7",
-      "when": 1765783365422,
-      "tag": "0001_even_randall_flagg",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1765850801017,
-      "tag": "0002_secret_scorpion",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1766125801544,
-      "tag": "0003_new_red_shift",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1766126166148,
-      "tag": "0004_condemned_switch",
+      "when": 1766854566309,
+      "tag": "0001_dazzling_wendell_vaughn",
       "breakpoints": true
     }
   ]
