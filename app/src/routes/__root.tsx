@@ -1,20 +1,19 @@
+import { TanStackDevtools } from "@tanstack/react-devtools";
+import type { QueryClient } from "@tanstack/react-query";
 import {
+	createRootRouteWithContext,
 	HeadContent,
 	Outlet,
 	Scripts,
-	createRootRouteWithContext,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
-import { TanStackDevtools } from "@tanstack/react-devtools";
+
+import { Toaster } from "@/components/ui/sonner";
+import { getSession } from "@/modules/auth/auth.api";
+import { Providers } from "@/providers";
 
 import TanStackQueryDevtools from "../integrations/tanstack-query/devtools";
-
 import appCss from "../styles.css?url";
-
-import type { QueryClient } from "@tanstack/react-query";
-import { getSessionFn } from "@/functions/get-session";
-import { Providers } from "@/providers";
-import { Toaster } from "@/components/ui/sonner";
 
 interface MyRouterContext {
 	queryClient: QueryClient;
@@ -22,7 +21,7 @@ interface MyRouterContext {
 
 export const Route = createRootRouteWithContext<MyRouterContext>()({
 	beforeLoad: async () => {
-		const session = await getSessionFn();
+		const session = await getSession();
 		return { session };
 	},
 	head: () => ({

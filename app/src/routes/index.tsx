@@ -1,62 +1,61 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute } from "@tanstack/react-router";
 import {
-	Zap,
-	Server,
 	Route as RouteIcon,
+	Server,
 	Shield,
-	Waves,
 	Sparkles,
-} from 'lucide-react'
+	Waves,
+	Zap,
+} from "lucide-react";
 
-import { Button } from '@/components/ui/button'
+import { Button } from "@/components/ui/button";
 import {
 	Card,
+	CardDescription,
 	CardHeader,
 	CardTitle,
-	CardDescription,
-} from '@/components/ui/card'
+} from "@/components/ui/card";
 
-export const Route = createFileRoute('/')({ component: App })
+export const Route = createFileRoute("/")({ component: App });
 
 function App() {
 	const features = [
 		{
 			icon: <Zap className="w-10 h-10 text-emerald-400" />,
-			title: 'Instant Uptime Monitoring',
+			title: "Instant Uptime Monitoring",
 			description:
-				'Fast, reliable checks for HTTP, HTTPS, and TCP endpoints from multiple regions.',
+				"Fast, reliable checks for HTTP, HTTPS, and TCP endpoints from multiple regions.",
 		},
 		{
 			icon: <Server className="w-10 h-10 text-emerald-400" />,
-			title: 'Public Status Pages',
+			title: "Public Status Pages",
 			description:
-				'Clean, calm status pages that build trust with customers during incidents.',
+				"Clean, calm status pages that build trust with customers during incidents.",
 		},
 		{
 			icon: <RouteIcon className="w-10 h-10 text-emerald-400" />,
-			title: 'Incident Updates',
+			title: "Incident Updates",
 			description:
-				'Post clear incident updates and resolutions without unnecessary complexity.',
+				"Post clear incident updates and resolutions without unnecessary complexity.",
 		},
 		{
 			icon: <Shield className="w-10 h-10 text-emerald-400" />,
-			title: 'Built for Reliability',
+			title: "Built for Reliability",
 			description:
-				'boringstatus is designed to stay online even when your systems are not.',
+				"boringstatus is designed to stay online even when your systems are not.",
 		},
 		{
 			icon: <Waves className="w-10 h-10 text-emerald-400" />,
-			title: 'Signal Over Noise',
-			description:
-				'Alerts that fire only when something is actually broken.',
+			title: "Signal Over Noise",
+			description: "Alerts that fire only when something is actually broken.",
 		},
 		{
 			icon: <Sparkles className="w-10 h-10 text-emerald-400" />,
-			title: 'Intentionally Boring',
+			title: "Intentionally Boring",
 			description:
-				'No flashy charts. No vanity metrics. Just uptime and clarity.',
+				"No flashy charts. No vanity metrics. Just uptime and clarity.",
 		},
-	]
+	];
 
 	return (
 		<div className="min-h-screen bg-slate-950 text-slate-100">
@@ -102,9 +101,9 @@ function App() {
 			{/* Features */}
 			<section className="py-16 px-6 max-w-7xl mx-auto">
 				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-					{features.map((feature, index) => (
+					{features.map((feature) => (
 						<Card
-							key={index}
+							key={feature.title}
 							className="bg-slate-900 border-slate-800 hover:border-slate-700 transition-colors"
 						>
 							<CardHeader>
@@ -121,5 +120,5 @@ function App() {
 				</div>
 			</section>
 		</div>
-	)
+	);
 }
