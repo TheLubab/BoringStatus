@@ -1,147 +1,189 @@
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
-import { monitor, notificationChannel } from "./saas-schema";
+import { monitor, notificationChannel } from "./schema";
 
-// ---------------------------------------------------------
-// ZOD Schema
-// ---------------------------------------------------------
-//
+// ----------------------------------------------------------------------
+// 1. MONITOR CONFIGURATION SCHEMAS
+// ----------------------------------------------------------------------
 
-const baseMonitorSchema = createInsertSchema(monitor, {
-	userId: z.string().optional(),
-	// Use callback functions to extend types properly (preserves type inference)
-
-	expectedStatus: (schema) =>
-		schema.regex(
+// HTTP Specific Config
+const httpConfigSchema = z.object({
+	method: z.enum(["GET", "POST", "PUT", "PATCH", "DELETE"]).default("GET"),
+	expectedStatus: z
+		.string()
+		.regex(
 			/^(\d{3}(-\d{3})?)(,\s*\d{3}(-\d{3})?)*$/,
 			"Format: 200 or 200,201 or 200-299",
-		),
-	target: z.string().min(1, "Target is required"),
-
-	headers: z
-		.array(
-			z.object({
-				key: z.string().min(1, "key is required"),
-				value: z.string(),
-			}),
 		)
-		.optional(),
-}).extend({
-	frequency: z.coerce
-		.number()
-		.min(60, "Minimum check interval is 60 seconds")
-		.max(86400, "Maximum check interval is 24 hours")
-		.optional(),
-	port: z.coerce
-		.number()
-		.min(1, "Smallest port is 1")
-		.max(65535, "Biggest port is 65535")
-		.optional()
-		.nullable(),
-	timeout: z.coerce.number().min(1).max(60).optional(),
-	retries: z.coerce.number().min(0).max(10).optional(),
+		.default("200-299"),
+	followRedirects: z.boolean().default(true),
+	headers: z.record(z.string()).optional(), // { "Authorization": "Bearer..." }
+	body: z.string().optional(),
 });
 
-export const insertMonitorSchema = baseMonitorSchema
-	.extend({
-		channelIds: z.array(z.string()).optional(),
-	})
-	.superRefine((data, ctx) => {
-		// WEBSITE: must be valid URL
-		if (data.type === "http") {
-			try {
-				new URL(data.target);
-			} catch {
-				ctx.addIssue({
-					code: "custom",
-					message: "Please enter a valid URL (e.g., https://boringstatus.com)",
-					path: ["target"],
-				});
-			}
-		}
+// TCP / Ping Specific Config
+const tcpConfigSchema = z.object({
+	port: z.coerce.number().min(1).max(65535, "Port must be between 1 and 65535"),
+});
 
-		// PING: hostname or IP
-		if (data.type === "ping") {
-			const hostnameRegex = /^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$/i;
-			const ipRegex = /^(\d{1,3}\.){3}\d{1,3}$/;
-			if (!hostnameRegex.test(data.target) && !ipRegex.test(data.target)) {
-				ctx.addIssue({
-					code: "custom",
-					message: "Please enter a valid hostname or IP address",
-					path: ["target"],
-				});
-			}
-		}
+// Keyword Specific Config
+const keywordConfigSchema = httpConfigSchema.extend({
+	searchString: z.string().min(1, "Keyword is required"),
+	shouldNotExist: z.boolean().default(false),
+});
 
-		// TCP/PORT: must be IP and port required
-		if (data.type === "tcp") {
-			const ipRegex = /^(\d{1,3}\.){3}\d{1,3}$/;
-			if (!ipRegex.test(data.target)) {
-				ctx.addIssue({
-					code: "custom",
-					message: "Please enter a valid IP address",
-					path: ["target"],
-				});
-			}
-			if (!data.port) {
-				ctx.addIssue({
-					code: "custom",
-					message: "Port is required for TCP monitors",
-					path: ["port"],
-				});
-			}
-		}
-	});
+// Docker Specific Config
+const dockerConfigSchema = z.object({
+	containerName: z.string().min(1, "Container name is required"),
+	host: z.string().default("local"),
+});
+
+// ----------------------------------------------------------------------
+// 2. THE BASE MONITOR SCHEMA
+// ----------------------------------------------------------------------
+// We use createInsertSchema to get the "common" fields (name, active, frequency)
+const baseMonitorSchema = createInsertSchema(monitor, {
+	organizationId: z.string().optional(), // Inferred from session usually
+
+	// Validation for common fields
+	target: z.string().min(1, "Target is required"),
+	frequency: z.coerce.number().min(60).max(86400),
+	timeout: z.coerce.number().min(1).max(60),
+
+	// Override these to avoid Zod inference issues with JSONB/Arrays
+	regions: z.array(z.string()).default(["default"]),
+	config: z.any(), // ⚠️ We will overwrite this in the union below
+});
+
+// ----------------------------------------------------------------------
+// 3. THE DISCRIMINATED UNION (The Magic)
+// ----------------------------------------------------------------------
+// This creates a schema that changes shape based on the 'type' field
+export const insertMonitorSchema = z
+	.discriminatedUnion("type", [
+		// HTTP
+		baseMonitorSchema
+			.extend({
+				type: z.literal("http"),
+				config: httpConfigSchema,
+			})
+			.refine(
+				(data) => {
+					try {
+						new URL(data.target);
+						return true;
+					} catch {
+						return false;
+					}
+				},
+				{ message: "Must be a valid URL", path: ["target"] },
+			),
+
+		// PING
+		baseMonitorSchema
+			.extend({
+				type: z.literal("ping"),
+				config: z.object({}), // No extra config needed
+			})
+			.refine(
+				(data) => {
+					const isIp = /^(\d{1,3}\.){3}\d{1,3}$/.test(data.target);
+					const isHost = /^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$/i.test(
+						data.target,
+					);
+					return isIp || isHost;
+				},
+				{ message: "Must be a valid Hostname or IP", path: ["target"] },
+			),
+
+		// TCP
+		baseMonitorSchema
+			.extend({
+				type: z.literal("tcp"),
+				config: tcpConfigSchema,
+			})
+			.refine(
+				(data) => {
+					const isIp = /^(\d{1,3}\.){3}\d{1,3}$/.test(data.target);
+					const isHost = /^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$/i.test(
+						data.target,
+					);
+					return isIp || isHost;
+				},
+				{ message: "Must be a valid Hostname or IP", path: ["target"] },
+			),
+
+		// KEYWORD
+		baseMonitorSchema
+			.extend({
+				type: z.literal("keyword"),
+				config: keywordConfigSchema,
+			})
+			.refine(
+				(data) => {
+					try {
+						new URL(data.target);
+						return true;
+					} catch {
+						return false;
+					}
+				},
+				{ message: "Must be a valid URL", path: ["target"] },
+			),
+
+		// DOCKER
+		baseMonitorSchema.extend({
+			type: z.literal("docker"),
+			config: dockerConfigSchema,
+		}),
+	])
+	.and(
+		// Add global extra fields not in DB but needed for UI (e.g. channel selection)
+		z.object({
+			channelIds: z.array(z.string()).optional(),
+		}),
+	);
 
 export type MonitorFormValues = z.infer<typeof insertMonitorSchema>;
 
-// ---------------------------------------------------------
-// ZOD Schema for Notification Channels
-// ---------------------------------------------------------
+// ----------------------------------------------------------------------
+// 4. NOTIFICATION CHANNELS
+// ----------------------------------------------------------------------
 
 export const insertNotificationChannelSchema = createInsertSchema(
 	notificationChannel,
 	{
-		userId: z.string().optional(),
-		name: z
-			.string()
-			.min(1, "Channel name is required")
-			.max(100, "Name too long"),
+		organizationId: z.string().optional(),
+		name: z.string().min(1, "Name is required"),
 
-		type: z.string(),
-
-		// Allows any JSON structure, validated by superRefine
-		config: z.object({
-			email: z.email().optional(),
-			webhookUrl: z.url().optional(),
-			verified: z.boolean().optional(),
-		}),
+		// We override config to be generic at first, then refine it below
+		config: z.any(),
 	},
 ).superRefine((data, ctx) => {
-	const config = data.config;
+	const { type, config } = data;
 
-	switch (data.type) {
-		case "email":
-			if (!config.email || !z.email().safeParse(config.email).success) {
-				ctx.addIssue({
-					code: "custom",
-					message: "Valid email address is required",
-					path: ["config", "email"],
-				});
-			}
-			break;
+	// EMAIL VALIDATION
+	if (type === "email") {
+		const result = z.object({ email: z.string().email() }).safeParse(config);
+		if (!result.success) {
+			ctx.addIssue({
+				code: z.ZodIssueCode.custom,
+				message: "Valid email required",
+				path: ["config", "email"],
+			});
+		}
+	}
 
-		case "slack":
-		case "webhook":
-		case "discord":
-			if (!config.webhookUrl || !z.url().safeParse(config.webhookUrl).success) {
-				ctx.addIssue({
-					code: "custom",
-					message: "Valid webhook URL is required",
-					path: ["config", "webhookUrl"],
-				});
-			}
-			break;
+	// WEBHOOK / SLACK / DISCORD VALIDATION
+	if (["webhook", "slack", "discord"].includes(type)) {
+		const result = z.object({ webhookUrl: z.string().url() }).safeParse(config);
+		if (!result.success) {
+			ctx.addIssue({
+				code: z.ZodIssueCode.custom,
+				message: "Valid Webhook URL required",
+				path: ["config", "webhookUrl"],
+			});
+		}
 	}
 });
 
