@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 import { z } from "zod";
 
 import { db } from "@/db";
@@ -7,6 +7,7 @@ import { getSession } from "@/modules/auth/auth.api";
 
 import { monitor, monitorsToChannels } from "./monitors.schema";
 import { insertMonitorSchema } from "./monitors.zod";
+import { notificationChannel } from "../integrations/integrations.schema";
 
 // Helper to ensure auth and org
 const requireAuth = async () => {
@@ -48,10 +49,19 @@ export const createMonitor = createServerFn({ method: "POST" })
 
 			// 2. Link Channels
 			if (channelIds && channelIds.length > 0) {
+				const channels = await tx.query.notificationChannel.findMany({
+					where: and(
+						inArray(notificationChannel.id, channelIds),
+						eq(notificationChannel.organizationId, activeOrgId)
+					)
+				});
+				if (channels.length !== channelIds.length) {
+					throw new Error("One or more channels not found or unauthorized");
+				}
 				await tx.insert(monitorsToChannels).values(
-					channelIds.map((channelId) => ({
+					channels.map((channel) => ({
 						monitorId: newMonitor.id,
-						channelId,
+						channelId: channel.id,
 					})),
 				);
 			}
