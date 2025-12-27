@@ -3,7 +3,7 @@ import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 
 import { db } from "@/db";
-import { getSession } from "@/modules/auth/auth.service";
+import { getSession } from "@/modules/auth/auth.api";
 
 import { generateApiKey } from "./apikeys.fn";
 import { apiKey } from "./apikeys.schema";
@@ -11,7 +11,7 @@ import { createApiKeySchema } from "./apikeys.zod";
 
 const requireAuth = async () => {
 	const session = await getSession();
-	const activeOrgId = session?.session?.activeOrganizationId;
+	const activeOrgId = session?.activeOrganizationId;
 	if (!session || !activeOrgId) {
 		throw new Error("Unauthorized");
 	}
