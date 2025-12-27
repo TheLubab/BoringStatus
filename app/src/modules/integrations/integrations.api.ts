@@ -4,7 +4,10 @@ import { z } from "zod";
 
 import { db } from "@/db";
 import { getSession } from "@/modules/auth/auth.api";
-import { monitor, monitorsToChannels } from "@/modules/monitors/monitors.schema";
+import {
+	monitor,
+	monitorsToChannels,
+} from "@/modules/monitors/monitors.schema";
 
 import { matchChannel as matchNotificationChannel } from "./integrations.fn";
 import { notificationChannel } from "./integrations.schema";
@@ -185,8 +188,8 @@ export const linkMonitorToChannel = createServerFn({ method: "POST" })
 		const channel = await db.query.notificationChannel.findFirst({
 			where: and(
 				eq(notificationChannel.id, data.channelId),
-				eq(notificationChannel.organizationId, activeOrgId)
-			)
+				eq(notificationChannel.organizationId, activeOrgId),
+			),
 		});
 		if (!channel) throw new Error("Channel not found or unauthorized");
 
@@ -194,8 +197,8 @@ export const linkMonitorToChannel = createServerFn({ method: "POST" })
 		const monitor_ = await db.query.monitor.findFirst({
 			where: and(
 				eq(monitor.id, data.monitorId),
-				eq(monitor.organizationId, activeOrgId)
-			)
+				eq(monitor.organizationId, activeOrgId),
+			),
 		});
 		if (!monitor_) throw new Error("Monitor not found or unauthorized");
 
