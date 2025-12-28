@@ -4,18 +4,20 @@ import { Bell, Loader2 } from "lucide-react";
 import { useEffect } from "react";
 import { useFormContext } from "react-hook-form";
 import { toast } from "sonner";
+
 import { ChannelAddDialog } from "@/components/channels/channel-add-dialog";
 import { FormField } from "@/components/ui/form";
-import type { MonitorFormValues } from "@/db/zod";
-import { getChannels } from "@/functions/channels";
+import { getNotificationChannelsByOrg } from "@/modules/integrations/integrations.api";
+import type { InsertMonitor } from "@/modules/monitors/monitors.zod";
+
 import { ChannelList } from "../../channels/channel-list";
 
 export function MonitorStepAlerting() {
-	const form = useFormContext<MonitorFormValues>();
+	const form = useFormContext<InsertMonitor>();
 
 	const { data: channels, isLoading } = useQuery({
 		queryKey: ["channels"],
-		queryFn: getChannels,
+		queryFn: getNotificationChannelsByOrg,
 	});
 
 	const search = useSearch({ strict: false });

@@ -37,11 +37,11 @@ export const monitor = pgTable(
 		target: text("target").notNull(),
 
 		// Scheduling
-		active: boolean("active").default(true).notNull(),
-		frequency: integer("frequency").default(300).notNull(), // Seconds
-		timeout: integer("timeout").default(10).notNull(), // Seconds
+		active: boolean("active").notNull(),
+		frequency: integer("frequency").notNull(), // Seconds
+		timeout: integer("timeout").notNull(), // Seconds
 
-		regions: jsonb("regions").default(["default"]).$type<string[]>(),
+		regions: jsonb("regions").notNull().$type<string[]>(),
 
 		// POLYMORPHIC CONFIGURATION
 		config: jsonb("config").notNull().$type<MonitorConfig>(),
@@ -50,9 +50,9 @@ export const monitor = pgTable(
 		alertRules: jsonb("alert_rules").notNull().$type<MonitorAlertRule[]>(),
 
 		// State (cache)
-		status: text("status").default("pending").$type<MonitorStatus>(),
-		lastCheckAt: timestamp("last_check_at"),
-		nextCheckAt: timestamp("next_check_at"),
+		status: text("status").notNull().$type<MonitorStatus>(),
+		lastCheckAt: timestamp("last_check_at").notNull(),
+		nextCheckAt: timestamp("next_check_at").notNull(),
 
 		createdAt: timestamp("created_at").defaultNow(),
 		updatedAt: timestamp("updated_at").defaultNow(),

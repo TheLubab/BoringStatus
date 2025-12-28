@@ -6,15 +6,19 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
-import { insertMonitorSchema, type MonitorFormValues } from "@/db/zod";
 import { cn } from "@/lib/utils";
+import {
+	type InsertMonitor,
+	insertMonitorSchema,
+} from "@/modules/monitors/monitors.zod";
+
 import { MonitorStepAlerting } from "./monitor-step-alerting";
 import { MonitorStepGeneral } from "./monitor-step-general";
 import { MonitorSuccess } from "./monitor-success";
 
 interface AddMonitorProps {
-	onComplete?: (data: MonitorFormValues) => void;
-	onSubmitAction?: (data: MonitorFormValues) => Promise<void>;
+	onComplete?: (data: InsertMonitor) => void;
+	onSubmitAction?: (data: InsertMonitor) => Promise<void>;
 	className?: string;
 	allowHighFrequency?: boolean;
 	allowAdvancedMethods?: boolean;
@@ -37,26 +41,23 @@ export function MonitorCreate({
 	const [isChecking, setIsChecking] = useState(false);
 	const [step, setStep] = useState(1);
 
-	const form = useForm<MonitorFormValues>({
-		resolver: zodResolver(insertMonitorSchema) as any,
+	const form = useForm<InsertMonitor>({
+		resolver: zodResolver(insertMonitorSchema),
 		defaultValues: {
-			type: "http",
 			name: "",
 			target: "",
-
-			active: true,
-			frequency: 60 * 5,
-			timeout: 20,
-			retries: 1,
-
-			method: "GET",
-			expectedStatus: "200-299",
-			headers: [],
-
-			port: 80,
-
-			alertOnDown: true,
-			alertOnRecovery: true,
+			type: "http",
+			frequency: 300,
+			timeout: 10,
+			config: {
+				method: "GET",
+				expectedStatus: "200",
+				followRedirects: true,
+				headers: {},
+				body: "",
+				includesKeyword: "",
+				excludesKeyword: "",
+			},
 			channelIds: [],
 		},
 	});
@@ -68,11 +69,7 @@ export function MonitorCreate({
 			"target",
 			"frequency",
 			"timeout",
-			"retries",
-			"method",
-			"expectedStatus",
-			"headers",
-			"port",
+			"config",
 		]);
 
 		if (result) {
@@ -82,17 +79,40 @@ export function MonitorCreate({
 			const errorFields = Object.keys(errors);
 
 			if (errorFields.length > 0) {
-				const firstError = errors[errorFields[0] as keyof typeof errors];
-				toast.error(
-					firstError?.message || `Please check the ${errorFields[0]} field`,
-				);
+				const firstErrorKey = errorFields[0];
+				const firstError = errors[firstErrorKey as keyof typeof errors];
+
+				let errorMessage = "Please check the form fields";
+
+				if (firstError) {
+					if (typeof firstError === "object" && "message" in firstError) {
+						errorMessage = firstError.message as string;
+					} else if (typeof firstError === "object") {
+						const nestedKeys = Object.keys(firstError);
+						if (nestedKeys.length > 0) {
+							const nestedError =
+								firstError[nestedKeys[0] as keyof typeof firstError];
+							if (
+								nestedError &&
+								typeof nestedError === "object" &&
+								"message" in nestedError
+							) {
+								errorMessage = nestedError.message as string;
+							} else {
+								errorMessage = `Please check the ${firstErrorKey}.${nestedKeys[0]} field`;
+							}
+						}
+					}
+				}
+
+				toast.error(errorMessage);
 			} else {
 				toast.error("Please fill in all required fields correctly");
 			}
 		}
 	};
 
-	const onSubmit = async (values: MonitorFormValues) => {
+	const onSubmit = async (values: InsertMonitor) => {
 		const data = values;
 		setIsChecking(true);
 
@@ -100,7 +120,6 @@ export function MonitorCreate({
 			if (onSubmitAction) {
 				await onSubmitAction(data);
 			} else {
-				await new Promise((resolve) => setTimeout(resolve, 2000));
 				console.log("Creating Monitor:", data);
 			}
 
@@ -109,6 +128,7 @@ export function MonitorCreate({
 			toast.success("Monitor created successfully!");
 			if (onComplete) onComplete(data);
 		} catch (error) {
+			console.error(error);
 			setIsChecking(false);
 			toast.error("Failed to create monitor. Please try again.");
 		}
@@ -140,7 +160,9 @@ export function MonitorCreate({
 					if (errorFields.length > 0) {
 						const firstError = errors[errorFields[0] as keyof typeof errors];
 						toast.error(
-							firstError?.message || "Please check the form for errors",
+							firstError?.message
+								? String(firstError?.message)
+								: "Please check the form for errors",
 						);
 					} else {
 						toast.error("Please check the form for errors");

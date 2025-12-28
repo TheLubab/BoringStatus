@@ -23,7 +23,7 @@ function AddMonitorPage() {
 			router.invalidate();
 		} catch (error) {
 			console.error(error);
-			throw error; // Let the component handle the error display
+			throw error;
 		}
 	};
 

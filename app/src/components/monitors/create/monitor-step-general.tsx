@@ -7,8 +7,9 @@ import {
 	Settings2,
 	Trash2,
 } from "lucide-react";
-import { useEffect } from "react";
-import { useFieldArray, useFormContext, useWatch } from "react-hook-form";
+import { useEffect, useState } from "react";
+import { useFormContext, useWatch } from "react-hook-form";
+
 import { ProBadge } from "@/components/saas/pro-badge";
 import {
 	Accordion,
@@ -28,8 +29,8 @@ import { Input } from "@/components/ui/input";
 import { RadioCard } from "@/components/ui/radio-card";
 import { RichRadioItem } from "@/components/ui/radio-item-rich";
 import { Separator } from "@/components/ui/separator";
-import type { MonitorFormValues } from "@/db/zod";
 import { cn } from "@/lib/utils";
+import type { InsertMonitor } from "@/modules/monitors/monitors.zod";
 
 interface MonitorStepGeneralProps {
 	allowHighFrequency?: boolean;
@@ -46,21 +47,43 @@ export function MonitorStepGeneral({
 	allowCustomHeaders = false,
 	usageLabel,
 }: MonitorStepGeneralProps) {
-	const form = useFormContext<MonitorFormValues>();
+	const form = useFormContext<InsertMonitor>();
+	const [headersList, setHeadersList] = useState<
+		{ key: string; value: string }[]
+	>(
+		Object.entries(form.getValues("config.headers") || {}).map(([k, v]) => ({
+			key: k,
+			value: v,
+		})),
+	);
 
-	const { fields, append, remove } = useFieldArray({
-		control: form.control,
-		name: "headers",
-		rules: {
-			maxLength: 10,
-		},
-	});
+	// Sync headers to form
+	useEffect(() => {
+		const headersRecord: Record<string, string> = {};
+		headersList.forEach((h) => {
+			if (h.key) headersRecord[h.key] = h.value;
+		});
+		form.setValue("config.headers", headersRecord);
+	}, [headersList, form]);
+
+	const appendHeader = () =>
+		setHeadersList([...headersList, { key: "", value: "" }]);
+	const removeHeader = (index: number) => {
+		const newList = [...headersList];
+		newList.splice(index, 1);
+		setHeadersList(newList);
+	};
+	const updateHeader = (index: number, field: "key" | "value", val: string) => {
+		const newList = [...headersList];
+		newList[index][field] = val;
+		setHeadersList(newList);
+	};
 
 	const type = useWatch({ control: form.control, name: "type" });
 
 	const currentStatus = useWatch({
 		control: form.control,
-		name: "expectedStatus",
+		name: "config.expectedStatus",
 	});
 
 	const target = useWatch({
@@ -70,7 +93,7 @@ export function MonitorStepGeneral({
 
 	const port = useWatch({
 		control: form.control,
-		name: "port",
+		name: "config.port",
 	});
 
 	useEffect(() => {
@@ -78,6 +101,18 @@ export function MonitorStepGeneral({
 			shouldDirty: true,
 		});
 	}, [target, port, type, form.setValue]);
+
+	// Auto-detect protocol based on port
+	useEffect(() => {
+		if (type === "tcp" && port) {
+			const udpPorts = [53, 67, 68, 69, 123, 161, 162, 514, 500, 4500];
+			if (udpPorts.includes(Number(port))) {
+				form.setValue("config.protocol", "UDP");
+			} else {
+				form.setValue("config.protocol", "TCP");
+			}
+		}
+	}, [port, type, form.setValue]);
 
 	const isCustomStatus = currentStatus !== "200-299" && currentStatus !== "200";
 
@@ -92,9 +127,18 @@ export function MonitorStepGeneral({
 						description="HTTP / HTTPS"
 						icon={<Globe className="w-6 h-6" />}
 						selectedValue={type}
-						onChange={(val) =>
-							form.setValue("type", val as "http" | "ping" | "tcp")
-						}
+						onChange={() => {
+							form.setValue("type", "http");
+							form.setValue("config", {
+								method: "GET",
+								expectedStatus: "200",
+								followRedirects: true,
+								headers: {},
+								body: "",
+								includesKeyword: "",
+								excludesKeyword: "",
+							});
+						}}
 					/>
 					<RadioCard
 						value="ping"
@@ -102,9 +146,10 @@ export function MonitorStepGeneral({
 						description="ICMP / Hostname"
 						icon={<Activity className="w-6 h-6" />}
 						selectedValue={type}
-						onChange={(val) =>
-							form.setValue("type", val as "http" | "ping" | "tcp")
-						}
+						onChange={() => {
+							form.setValue("type", "ping");
+							form.setValue("config", {});
+						}}
 					/>
 					<RadioCard
 						value="tcp"
@@ -112,9 +157,13 @@ export function MonitorStepGeneral({
 						description="TCP / UDP"
 						icon={<Server className="w-6 h-6" />}
 						selectedValue={type}
-						onChange={(val) =>
-							form.setValue("type", val as "http" | "ping" | "tcp")
-						}
+						onChange={() => {
+							form.setValue("type", "tcp");
+							form.setValue("config", {
+								port: 443,
+								protocol: "TCP",
+							});
+						}}
 					/>
 				</div>
 			</div>
@@ -169,12 +218,12 @@ export function MonitorStepGeneral({
 					/>
 				</div>
 
-				{/* Port Input (TCP Only) */}
+				{/* Port & Protocol (TCP Only) */}
 				{type === "tcp" && (
 					<div className="md:col-span-3">
 						<FormField
 							control={form.control}
-							name="port"
+							name="config.port"
 							render={({ field }) => (
 								<FormItem>
 									<FormLabel>Port</FormLabel>
@@ -277,7 +326,7 @@ export function MonitorStepGeneral({
 								<div className="space-y-2">
 									<FormField
 										control={form.control}
-										name="method"
+										name="config.method"
 										render={({ field }) => (
 											<FormItem>
 												<FormLabel className="text-xs font-semibold text-muted-foreground">
@@ -318,7 +367,7 @@ export function MonitorStepGeneral({
 								<div className="space-y-2">
 									<FormField
 										control={form.control}
-										name="expectedStatus"
+										name="config.expectedStatus"
 										render={({ field }) => (
 											<FormItem>
 												<FormLabel className="text-xs font-semibold text-muted-foreground flex justify-between">
@@ -379,40 +428,35 @@ export function MonitorStepGeneral({
 									</span>
 									{allowCustomHeaders ? (
 										<div className="space-y-2">
-											{fields.map((field, index) => (
+											{headersList.map((header, index) => (
 												<div
-													key={field.id}
+													// biome-ignore lint/suspicious/noArrayIndexKey: :p
+													key={index}
 													className="flex items-center gap-2 animate-in fade-in slide-in-from-left-2"
 												>
-													<FormField
-														control={form.control}
-														name={`headers.${index}.key`}
-														render={({ field }) => (
-															<Input
-																{...field}
-																placeholder="Key"
-																className="h-9 font-mono text-xs flex-1"
-															/>
-														)}
+													<Input
+														value={header.key}
+														onChange={(e) =>
+															updateHeader(index, "key", e.target.value)
+														}
+														placeholder="Key"
+														className="h-9 font-mono text-xs flex-1"
 													/>
 													<span className="text-muted-foreground">:</span>
-													<FormField
-														control={form.control}
-														name={`headers.${index}.value`}
-														render={({ field }) => (
-															<Input
-																{...field}
-																placeholder="Value"
-																className="h-9 font-mono text-xs flex-1"
-															/>
-														)}
+													<Input
+														value={header.value}
+														onChange={(e) =>
+															updateHeader(index, "value", e.target.value)
+														}
+														placeholder="Value"
+														className="h-9 font-mono text-xs flex-1"
 													/>
 													<Button
 														type="button"
 														variant="ghost"
 														size="icon"
 														className="h-9 w-9 text-muted-foreground hover:text-destructive shrink-0"
-														onClick={() => remove(index)}
+														onClick={() => removeHeader(index)}
 													>
 														<Trash2 className="w-4 h-4" />
 													</Button>
@@ -422,7 +466,7 @@ export function MonitorStepGeneral({
 												type="button"
 												variant="outline"
 												size="sm"
-												onClick={() => append({ key: "", value: "" })}
+												onClick={appendHeader}
 												className="w-full border-dashed text-xs h-8"
 											>
 												<Plus className="w-3 h-3 mr-2" /> Add Header
@@ -438,7 +482,7 @@ export function MonitorStepGeneral({
 								<div className="space-y-2">
 									<FormField
 										control={form.control}
-										name="keyword_found"
+										name="config.includesKeyword"
 										render={({ field }) => (
 											<FormItem>
 												<FormLabel className="text-xs font-semibold text-muted-foreground">
@@ -464,7 +508,7 @@ export function MonitorStepGeneral({
 								<div className="space-y-2">
 									<FormField
 										control={form.control}
-										name="keyword_missing"
+										name="config.excludesKeyword"
 										render={({ field }) => (
 											<FormItem>
 												<FormLabel className="text-xs font-semibold text-muted-foreground">
@@ -492,6 +536,31 @@ export function MonitorStepGeneral({
 						{/* PING/TCP ADVANCED */}
 						{(type === "ping" || type === "tcp") && (
 							<div className="grid grid-cols-1 sm:grid-cols-2 gap-6 animate-in fade-in slide-in-from-top-2 duration-300">
+								{type === "tcp" && (
+									<div className="space-y-2">
+										<FormField
+											control={form.control}
+											name="config.protocol"
+											render={({ field }) => (
+												<FormItem>
+													<FormLabel className="text-xs font-semibold text-muted-foreground">
+														Protocol
+													</FormLabel>
+													<FormControl>
+														<select
+															{...field}
+															value={field.value ?? "TCP"}
+															className="w-full h-9 rounded-md border bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+														>
+															<option value="TCP">TCP</option>
+															<option value="UDP">UDP</option>
+														</select>
+													</FormControl>
+												</FormItem>
+											)}
+										/>
+									</div>
+								)}
 								<div className="space-y-2">
 									<span className="text-xs font-semibold text-muted-foreground">
 										Timeout (seconds)
@@ -499,24 +568,6 @@ export function MonitorStepGeneral({
 									<FormField
 										control={form.control}
 										name="timeout"
-										render={({ field }) => (
-											<Input
-												type="number"
-												{...field}
-												value={field.value as number}
-												onChange={(e) => field.onChange(Number(e.target.value))}
-												className="h-9"
-											/>
-										)}
-									/>
-								</div>
-								<div className="space-y-2">
-									<span className="text-xs font-semibold text-muted-foreground">
-										Max Retries
-									</span>
-									<FormField
-										control={form.control}
-										name="retries"
 										render={({ field }) => (
 											<Input
 												type="number"

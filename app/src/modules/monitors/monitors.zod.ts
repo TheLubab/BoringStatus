@@ -32,15 +32,14 @@ export type MonitorStatus = HeartbeatStatus | "pending";
 // MONITOR CONFIGS
 
 const httpConfigSchema = z.object({
-	method: z.enum(["GET", "POST", "PUT", "PATCH", "DELETE"]).default("GET"),
+	method: z.enum(["GET", "POST", "PUT", "PATCH", "DELETE"]),
 	expectedStatus: z
 		.string()
 		.regex(
 			/^(\d{3}(-\d{3})?)(,\s*\d{3}(-\d{3})?)*$/,
 			"Format: 200 or 200,201 or 200-299",
-		)
-		.default("200-299"),
-	followRedirects: z.boolean().default(true),
+		),
+	followRedirects: z.boolean(),
 	headers: z.record(z.string(), z.string()).optional(),
 	body: z.string().optional(),
 	includesKeyword: z.string().optional(),
@@ -48,12 +47,14 @@ const httpConfigSchema = z.object({
 });
 
 const tcpConfigSchema = z.object({
-	port: z.coerce.number().min(1).max(65535, "Port must be between 1 and 65535"),
+	port: z.coerce
+		.number<any>()
+		.min(1)
+		.max(65535, "Port must be between 1 and 65535"),
+	protocol: z.enum(["TCP", "UDP"]),
 });
 
-const pingConfigSchema = z.object({
-	port: z.coerce.number().min(1).max(65535, "Port must be between 1 and 65535"),
-});
+const pingConfigSchema = z.object({});
 
 export type HttpConfig = z.infer<typeof httpConfigSchema>;
 export type TcpConfig = z.infer<typeof tcpConfigSchema>;
@@ -64,13 +65,8 @@ export type MonitorConfig = HttpConfig | TcpConfig | PingConfig;
 // THE BASE MONITOR SCHEMA
 
 const baseMonitorSchema = createInsertSchema(monitor, {
-	organizationId: z.string().optional(),
-
-	frequency: z.coerce.number().min(60).max(86400),
-	timeout: z.coerce.number().min(1).max(60),
-
-	regions: z.array(z.string()).default(["default"]),
-	config: z.any(),
+	frequency: z.number().min(60).max(86400),
+	timeout: z.number().min(1).max(60),
 }).omit({
 	id: true,
 	status: true,
@@ -78,35 +74,24 @@ const baseMonitorSchema = createInsertSchema(monitor, {
 	updatedAt: true,
 	lastCheckAt: true,
 	nextCheckAt: true,
+	organizationId: true,
 });
 
 // THE DISCRIMINATED UNION
-
 export const insertMonitorSchema = z
 	.discriminatedUnion("type", [
 		// HTTP
-		baseMonitorSchema
-			.extend({
-				type: z.literal("http"),
-				config: httpConfigSchema,
-			})
-			.refine(
-				(data) => {
-					try {
-						new URL(data.target);
-						return true;
-					} catch {
-						return false;
-					}
-				},
-				{ message: "Must be a valid URL", path: ["target"] },
-			),
+		baseMonitorSchema.extend({
+			type: z.literal("http"),
+			config: httpConfigSchema,
+			target: z.url("Must be a valid URL"),
+		}),
 
 		// PING
 		baseMonitorSchema
 			.extend({
 				type: z.literal("ping"),
-				config: pingConfigSchema, // No extra config needed
+				config: pingConfigSchema,
 			})
 			.refine(
 				(data) => {
