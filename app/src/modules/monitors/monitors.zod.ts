@@ -20,7 +20,7 @@ export const monitorTypeSchema = z.enum([
 
 export const monitorAlertRuleSchema = z.object({
 	metric: z.string(),
-	operator: z.enum(["gt", "lt", "eq", "contains"]),
+	operator: z.enum(["gt", "lt", "eq", "neq", "contains"]),
 	value: z.coerce.string(),
 });
 

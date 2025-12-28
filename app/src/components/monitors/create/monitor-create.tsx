@@ -58,6 +58,15 @@ export function MonitorCreate({
 				includesKeyword: "",
 				excludesKeyword: "",
 			},
+			active: true,
+			regions: ["default"],
+			alertRules: [
+				{
+					metric: "status",
+					operator: "neq",
+					value: "up",
+				},
+			],
 			channelIds: [],
 		},
 	});
