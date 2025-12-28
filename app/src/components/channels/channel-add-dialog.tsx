@@ -146,23 +146,56 @@ export function ChannelAddForm({
 		defaultValues: {
 			name: "",
 			type: "email",
-			config: {
-				email: "",
-				webhookUrl: "",
-			},
-		},
+			email: "",
+			config: {},
+		} as any, // Cast to any because defaultValues is hard with discriminated unions
 	});
 
 	const handleTypeSelect = (type: ChannelType) => {
 		setSelectedType(type);
-		form.setValue("type", type);
-		form.setValue("config", {});
-		form.setValue("name", "");
+
+		const commonDefaults = {
+			name: form.getValues("name"),
+			type,
+			config: {},
+		};
+
+		if (type === "email") {
+			form.reset({
+				...commonDefaults,
+				type: "email",
+				email: "",
+			} as any);
+		} else if (type === "slack") {
+			form.reset({
+				...commonDefaults,
+				type: "slack",
+				webhookUrl: "",
+			} as any);
+		} else if (type === "discord") {
+			form.reset({
+				...commonDefaults,
+				type: "discord",
+				webhookUrl: "",
+			} as any);
+		} else if (type === "webhook") {
+			form.reset({
+				...commonDefaults,
+				type: "webhook",
+				webhookUrl: "",
+			} as any);
+		}
+
 		setStep("details");
 	};
 
 	const handleSendVerification = async () => {
-		const email = form.getValues("config").email;
+		const values = form.getValues();
+		if (values.type !== "email") return;
+
+		// @ts-ignore
+		const email = values.email;
+
 		if (!email) {
 			toast.error("Please enter an email address");
 			return;
@@ -193,14 +226,30 @@ export function ChannelAddForm({
 		setVerifying(false);
 		toast.success("Email verified!", { id: "verify-code" });
 
-		const data = form.getValues();
-		const newChannel = { ...data, id: crypto.randomUUID() };
+		const values = form.getValues();
+
+		// Construct the config object expected by the DB/API
+		let config = {};
+		if (values.type === "email") {
+			// @ts-ignore
+			config = { email: values.email };
+		} else if (["slack", "discord", "webhook"].includes(values.type)) {
+			// @ts-ignore
+			config = { webhookUrl: values.webhookUrl };
+		}
+
+		const newChannel = {
+			...values,
+			config,
+			id: crypto.randomUUID()
+		};
+		// @ts-ignore
 		onChannelCreate(newChannel);
 
 		setStep("success");
 	};
 
-	const onSubmit = async (data: NotificationChannelFormValues) => {
+	const onSubmit = async (data: InsertNotificationChannel) => {
 		if (data.type === "email") {
 			await handleSendVerification();
 			return;
@@ -214,7 +263,16 @@ export function ChannelAddForm({
 		setVerifying(false);
 		toast.success("Channel added successfully!", { id: "save-channel" });
 
-		const newChannel = { ...data, id: crypto.randomUUID() };
+		// Construct config for DB
+		let config = {};
+		if (["slack", "discord", "webhook"].includes(data.type)) {
+			// @ts-ignore
+			config = { webhookUrl: data.webhookUrl };
+		}
+
+		// @ts-ignore - DB type vs Form type mismatch for ID
+		const newChannel = { ...data, config, id: crypto.randomUUID() };
+		// @ts-ignore
 		onChannelCreate(newChannel);
 		setStep("success");
 	};
@@ -353,7 +411,7 @@ export function ChannelAddForm({
 							{selectedType === "email" && (
 								<FormField
 									control={form.control}
-									name="config.email"
+									name="email"
 									render={({ field }) => (
 										<FormItem>
 											<FormLabel>Email Address</FormLabel>
@@ -375,7 +433,7 @@ export function ChannelAddForm({
 								selectedType === "webhook") && (
 									<FormField
 										control={form.control}
-										name="config.webhookUrl"
+										name="webhookUrl"
 										render={({ field }) => (
 											<FormItem>
 												<div className="flex items-center justify-between">

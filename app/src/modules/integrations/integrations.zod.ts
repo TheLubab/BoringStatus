@@ -26,15 +26,6 @@ const discordConfigSchema = z.object({
 	webhookUrl: z.url("Must be a valid Discord Webhook URL"),
 });
 
-export const notificationChannelConfigSchema = z
-	.discriminatedUnion("type", [
-		z.object({ type: z.literal("email"), ...emailConfigSchema.shape }),
-		z.object({ type: z.literal("webhook"), ...webhookConfigSchema.shape }),
-		z.object({ type: z.literal("slack"), ...slackConfigSchema.shape }),
-		z.object({ type: z.literal("discord"), ...discordConfigSchema.shape }),
-	])
-	.transform(({ type, ...rest }) => rest);
-
 export type NotificationChannelType = z.infer<
 	typeof notificationChannelTypeSchema
 >;
@@ -51,14 +42,33 @@ export type NotificationChannelConfig =
 
 // API Functions
 
-export const insertNotificationChannelSchema = createInsertSchema(
+export const baseNotificationChannelSchema = createInsertSchema(
 	notificationChannel,
 	{
-		organizationId: z.undefined(),
 		type: notificationChannelTypeSchema,
-		config: notificationChannelConfigSchema,
 	},
-);
+).omit({
+	organizationId: true,
+});
+
+export const insertNotificationChannelSchema = z.discriminatedUnion("type", [
+	baseNotificationChannelSchema.extend({
+		type: z.literal("email"),
+		...emailConfigSchema.shape,
+	}),
+	baseNotificationChannelSchema.extend({
+		type: z.literal("webhook"),
+		...webhookConfigSchema.shape,
+	}),
+	baseNotificationChannelSchema.extend({
+		type: z.literal("slack"),
+		...slackConfigSchema.shape,
+	}),
+	baseNotificationChannelSchema.extend({
+		type: z.literal("discord"),
+		...discordConfigSchema.shape,
+	}),
+]);
 
 export type InsertNotificationChannel = z.infer<
 	typeof insertNotificationChannelSchema
