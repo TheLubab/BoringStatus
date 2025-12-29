@@ -380,7 +380,7 @@ export function MonitorStepGeneral({
 															className={cn(
 																"w-full h-9 rounded-md border bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
 																!allowCustomStatus &&
-																"opacity-50 cursor-not-allowed bg-muted",
+																	"opacity-50 cursor-not-allowed bg-muted",
 															)}
 															disabled={!allowCustomStatus}
 															value={
@@ -407,15 +407,15 @@ export function MonitorStepGeneral({
 
 													{(isCustomStatus ||
 														(allowCustomStatus && field.value === "")) && (
-															<FormControl>
-																<Input
-																	{...field}
-																	value={field.value || ""}
-																	className="h-9 font-mono animate-in fade-in slide-in-from-top-1"
-																	placeholder="e.g. 200, 201, 204"
-																/>
-															</FormControl>
-														)}
+														<FormControl>
+															<Input
+																{...field}
+																value={field.value || ""}
+																className="h-9 font-mono animate-in fade-in slide-in-from-top-1"
+																placeholder="e.g. 200, 201, 204"
+															/>
+														</FormControl>
+													)}
 												</div>
 												<FormMessage />
 											</FormItem>

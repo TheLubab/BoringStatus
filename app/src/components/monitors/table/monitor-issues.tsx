@@ -1,9 +1,4 @@
-import {
-	AlertTriangle,
-	AlertCircle,
-	Info,
-	Minus,
-} from "lucide-react";
+import { AlertTriangle, AlertCircle, Info, Minus } from "lucide-react";
 import {
 	Tooltip,
 	TooltipContent,

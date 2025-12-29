@@ -46,7 +46,7 @@ export function RichRadioItem({
 							"checked:border-primary checked:bg-primary",
 							"focus-visible:outline-none",
 							disabled &&
-							"checked:border-muted-foreground checked:bg-muted-foreground",
+								"checked:border-muted-foreground checked:bg-muted-foreground",
 						)}
 					/>
 					<div className="pointer-events-none absolute inset-0 flex items-center justify-center">

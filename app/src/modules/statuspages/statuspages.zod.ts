@@ -17,10 +17,7 @@ export const insertStatusPageSchema = createInsertSchema(statusPage, {
 	description: z.string().optional(),
 	customDomain: z
 		.string()
-		.regex(
-			/^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$/i,
-			"Must be a valid domain",
-		)
+		.regex(/^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$/i, "Must be a valid domain")
 		.optional()
 		.or(z.literal("")),
 	password: z.string().optional(),
@@ -69,4 +66,3 @@ export type UpdateStatusPage = z.infer<typeof updateStatusPageSchema>;
 export type GetStatusPageById = z.infer<typeof getStatusPageByIdSchema>;
 export type GetPublicStatusPage = z.infer<typeof getPublicStatusPageSchema>;
 export type DeleteStatusPage = z.infer<typeof deleteStatusPageSchema>;
-

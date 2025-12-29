@@ -1,7 +1,7 @@
-import * as React from "react"
-import * as LabelPrimitive from "@radix-ui/react-label"
+import type * as React from "react";
+import * as LabelPrimitive from "@radix-ui/react-label";
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";
 
 function Label({
 	className,
@@ -12,11 +12,11 @@ function Label({
 			data-slot="label"
 			className={cn(
 				"text-sm leading-none font-bold text-foreground select-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70",
-				className
+				className,
 			)}
 			{...props}
 		/>
-	)
+	);
 }
 
-export { Label }
+export { Label };

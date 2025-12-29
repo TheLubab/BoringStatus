@@ -38,7 +38,10 @@ import {
 	UptimeCell,
 } from "./monitor-cells";
 import { MonitorIssues } from "./monitor-issues";
-import type { DashboardMonitor, TcpConfig } from "@/modules/monitors/monitors.zod";
+import type {
+	DashboardMonitor,
+	TcpConfig,
+} from "@/modules/monitors/monitors.zod";
 
 interface MonitorTableProps {
 	data: DashboardMonitor[];
@@ -82,7 +85,9 @@ export function MonitorsTable({ data, onRowClick }: MonitorTableProps) {
 	}, [data, searchQuery, statusFilter]);
 
 	// --- Column Definitions ---
-	const columnHelper = createColumnHelper<DashboardMonitor & Record<string, any>>();
+	const columnHelper = createColumnHelper<
+		DashboardMonitor & Record<string, any>
+	>();
 	const columns = useMemo(
 		() => [
 			columnHelper.accessor("name", {
@@ -336,9 +341,9 @@ export function MonitorsTable({ data, onRowClick }: MonitorTableProps) {
 										{header.isPlaceholder
 											? null
 											: flexRender(
-												header.column.columnDef.header,
-												header.getContext(),
-											)}
+													header.column.columnDef.header,
+													header.getContext(),
+												)}
 									</TableHead>
 								))}
 							</TableRow>

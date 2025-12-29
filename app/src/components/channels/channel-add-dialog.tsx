@@ -193,7 +193,7 @@ export function ChannelAddForm({
 		const values = form.getValues();
 		if (values.type !== "email") return;
 
-		// @ts-ignore
+		// @ts-expect-error
 		const email = values.email;
 
 		if (!email) {
@@ -231,10 +231,10 @@ export function ChannelAddForm({
 		// Construct the config object expected by the DB/API
 		let config = {};
 		if (values.type === "email") {
-			// @ts-ignore
+			// @ts-expect-error
 			config = { email: values.email };
 		} else if (["slack", "discord", "webhook"].includes(values.type)) {
-			// @ts-ignore
+			// @ts-expect-error
 			config = { webhookUrl: values.webhookUrl };
 		}
 
@@ -243,7 +243,7 @@ export function ChannelAddForm({
 			config,
 			id: crypto.randomUUID(),
 		};
-		// @ts-ignore
+		// @ts-expect-error
 		onChannelCreate(newChannel);
 
 		setStep("success");
@@ -266,13 +266,13 @@ export function ChannelAddForm({
 		// Construct config for DB
 		let config = {};
 		if (["slack", "discord", "webhook"].includes(data.type)) {
-			// @ts-ignore
+			// @ts-expect-error
 			config = { webhookUrl: data.webhookUrl };
 		}
 
-		// @ts-ignore - DB type vs Form type mismatch for ID
+		// @ts-expect-error - DB type vs Form type mismatch for ID
 		const newChannel = { ...data, config, id: crypto.randomUUID() };
-		// @ts-ignore
+		// @ts-expect-error
 		onChannelCreate(newChannel);
 		setStep("success");
 	};
@@ -431,38 +431,38 @@ export function ChannelAddForm({
 							{(selectedType === "slack" ||
 								selectedType === "discord" ||
 								selectedType === "webhook") && (
-									<FormField
-										control={form.control}
-										name="webhookUrl"
-										render={({ field }) => (
-											<FormItem>
-												<div className="flex items-center justify-between">
-													<FormLabel>Webhook URL</FormLabel>
-													{selectedType !== "webhook" && (
-														<a
-															href={getSetupDocsUrl(selectedType)}
-															target="_blank"
-															rel="noopener noreferrer"
-															className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
-														>
-															Setup guide
-															<ExternalLink className="w-3 h-3" />
-														</a>
-													)}
-												</div>
-												<FormControl>
-													<Input
-														type="url"
-														placeholder={getWebhookPlaceholder(selectedType)}
-														className="font-mono text-sm"
-														{...field}
-													/>
-												</FormControl>
-												<FormMessage />
-											</FormItem>
-										)}
-									/>
-								)}
+								<FormField
+									control={form.control}
+									name="webhookUrl"
+									render={({ field }) => (
+										<FormItem>
+											<div className="flex items-center justify-between">
+												<FormLabel>Webhook URL</FormLabel>
+												{selectedType !== "webhook" && (
+													<a
+														href={getSetupDocsUrl(selectedType)}
+														target="_blank"
+														rel="noopener noreferrer"
+														className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
+													>
+														Setup guide
+														<ExternalLink className="w-3 h-3" />
+													</a>
+												)}
+											</div>
+											<FormControl>
+												<Input
+													type="url"
+													placeholder={getWebhookPlaceholder(selectedType)}
+													className="font-mono text-sm"
+													{...field}
+												/>
+											</FormControl>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+							)}
 
 							{selectedType === "webhook" && (
 								<Collapsible open={exampleOpen} onOpenChange={setExampleOpen}>

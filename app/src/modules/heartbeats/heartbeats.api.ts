@@ -101,9 +101,9 @@ export const recordHeartbeat = createServerFn({ method: "POST" })
 			const monitorRecord = await tx.query.monitor.findFirst({
 				where: organizationId
 					? and(
-						eq(monitor.id, data.monitorId),
-						eq(monitor.organizationId, organizationId),
-					)
+							eq(monitor.id, data.monitorId),
+							eq(monitor.organizationId, organizationId),
+						)
 					: eq(monitor.id, data.monitorId),
 				columns: { frequency: true, organizationId: true },
 			});

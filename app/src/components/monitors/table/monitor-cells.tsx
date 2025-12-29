@@ -23,7 +23,7 @@ export const MonitorNameCell = ({
 	let link: URL | undefined;
 	try {
 		link = new URL(url);
-	} catch (_) { }
+	} catch (_) {}
 	return (
 		<div className="flex flex-col py-1">
 			<span className="font-semibold text-sm text-foreground tracking-tight">
@@ -51,7 +51,11 @@ export const MonitorNameCell = ({
 
 export const UptimeCell = ({ uptime }: { uptime?: number }) => {
 	if (uptime === undefined || uptime === null) {
-		return <span className="font-mono font-bold text-xs text-muted-foreground">-</span>;
+		return (
+			<span className="font-mono font-bold text-xs text-muted-foreground">
+				-
+			</span>
+		);
 	}
 
 	let colorClass = "text-emerald-600 dark:text-emerald-400";
