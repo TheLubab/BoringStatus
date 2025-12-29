@@ -1,7 +1,7 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { z } from "zod";
 
-import { MonitorCreate } from "@/components/monitors/create/monitor-create";
+import { MonitorNew } from "@/components/monitors/create/monitor-new";
 import { createMonitor } from "@/modules/monitors/monitors.api";
 import type { InsertMonitor } from "@/modules/monitors/monitors.zod";
 
@@ -9,12 +9,12 @@ const monitorAddSearchSchema = z.object({
 	newChannelId: z.string().optional(),
 });
 
-export const Route = createFileRoute("/_dashboardLayout/monitors/add")({
+export const Route = createFileRoute("/_dashboardLayout/monitors/new")({
 	validateSearch: monitorAddSearchSchema,
-	component: AddMonitorPage,
+	component: NewMonitorPage,
 });
 
-function AddMonitorPage() {
+function NewMonitorPage() {
 	const router = useRouter();
 
 	const handleCreate = async (data: InsertMonitor) => {
@@ -28,9 +28,8 @@ function AddMonitorPage() {
 	};
 
 	return (
-		<div className="m-auto bg-white p-8 rounded-xl shadow-sm border w-full max-w-3xl">
-			<h1 className="text-2xl font-bold mb-6">New Monitor</h1>
-			<MonitorCreate
+		<div className="m-auto py-8 px-4 w-full max-w-2xl">
+			<MonitorNew
 				allowAdvancedMethods={true}
 				allowCustomHeaders={true}
 				allowCustomStatus={true}
