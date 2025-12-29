@@ -27,7 +27,7 @@ import { Route as DashboardLayoutMonitorsIndexRouteImport } from './routes/_dash
 import { Route as DashboardLayoutIntegrationsIndexRouteImport } from './routes/_dashboardLayout/integrations/index'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as DashboardLayoutOrganizationOrganizationViewRouteImport } from './routes/_dashboardLayout/organization/$organizationView'
-import { Route as DashboardLayoutMonitorsAddRouteImport } from './routes/_dashboardLayout/monitors/add'
+import { Route as DashboardLayoutMonitorsNewRouteImport } from './routes/_dashboardLayout/monitors/new'
 import { Route as DashboardLayoutMonitorsMonitorIdRouteImport } from './routes/_dashboardLayout/monitors/$monitorId'
 import { Route as DashboardLayoutAccountAccountViewRouteImport } from './routes/_dashboardLayout/account/$accountView'
 
@@ -123,10 +123,10 @@ const DashboardLayoutOrganizationOrganizationViewRoute =
     path: '/organization/$organizationView',
     getParentRoute: () => DashboardLayoutRouteRoute,
   } as any)
-const DashboardLayoutMonitorsAddRoute =
-  DashboardLayoutMonitorsAddRouteImport.update({
-    id: '/monitors/add',
-    path: '/monitors/add',
+const DashboardLayoutMonitorsNewRoute =
+  DashboardLayoutMonitorsNewRouteImport.update({
+    id: '/monitors/new',
+    path: '/monitors/new',
     getParentRoute: () => DashboardLayoutRouteRoute,
   } as any)
 const DashboardLayoutMonitorsMonitorIdRoute =
@@ -158,7 +158,7 @@ export interface FileRoutesByFullPath {
   '/auth/two-factor': typeof AuthTwoFactorRoute
   '/account/$accountView': typeof DashboardLayoutAccountAccountViewRoute
   '/monitors/$monitorId': typeof DashboardLayoutMonitorsMonitorIdRoute
-  '/monitors/add': typeof DashboardLayoutMonitorsAddRoute
+  '/monitors/new': typeof DashboardLayoutMonitorsNewRoute
   '/organization/$organizationView': typeof DashboardLayoutOrganizationOrganizationViewRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/integrations': typeof DashboardLayoutIntegrationsIndexRoute
@@ -180,7 +180,7 @@ export interface FileRoutesByTo {
   '/auth/two-factor': typeof AuthTwoFactorRoute
   '/account/$accountView': typeof DashboardLayoutAccountAccountViewRoute
   '/monitors/$monitorId': typeof DashboardLayoutMonitorsMonitorIdRoute
-  '/monitors/add': typeof DashboardLayoutMonitorsAddRoute
+  '/monitors/new': typeof DashboardLayoutMonitorsNewRoute
   '/organization/$organizationView': typeof DashboardLayoutOrganizationOrganizationViewRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/integrations': typeof DashboardLayoutIntegrationsIndexRoute
@@ -204,7 +204,7 @@ export interface FileRoutesById {
   '/auth/two-factor': typeof AuthTwoFactorRoute
   '/_dashboardLayout/account/$accountView': typeof DashboardLayoutAccountAccountViewRoute
   '/_dashboardLayout/monitors/$monitorId': typeof DashboardLayoutMonitorsMonitorIdRoute
-  '/_dashboardLayout/monitors/add': typeof DashboardLayoutMonitorsAddRoute
+  '/_dashboardLayout/monitors/new': typeof DashboardLayoutMonitorsNewRoute
   '/_dashboardLayout/organization/$organizationView': typeof DashboardLayoutOrganizationOrganizationViewRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/_dashboardLayout/integrations/': typeof DashboardLayoutIntegrationsIndexRoute
@@ -228,7 +228,7 @@ export interface FileRouteTypes {
     | '/auth/two-factor'
     | '/account/$accountView'
     | '/monitors/$monitorId'
-    | '/monitors/add'
+    | '/monitors/new'
     | '/organization/$organizationView'
     | '/api/auth/$'
     | '/integrations'
@@ -250,7 +250,7 @@ export interface FileRouteTypes {
     | '/auth/two-factor'
     | '/account/$accountView'
     | '/monitors/$monitorId'
-    | '/monitors/add'
+    | '/monitors/new'
     | '/organization/$organizationView'
     | '/api/auth/$'
     | '/integrations'
@@ -273,7 +273,7 @@ export interface FileRouteTypes {
     | '/auth/two-factor'
     | '/_dashboardLayout/account/$accountView'
     | '/_dashboardLayout/monitors/$monitorId'
-    | '/_dashboardLayout/monitors/add'
+    | '/_dashboardLayout/monitors/new'
     | '/_dashboardLayout/organization/$organizationView'
     | '/api/auth/$'
     | '/_dashboardLayout/integrations/'
@@ -415,11 +415,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardLayoutOrganizationOrganizationViewRouteImport
       parentRoute: typeof DashboardLayoutRouteRoute
     }
-    '/_dashboardLayout/monitors/add': {
-      id: '/_dashboardLayout/monitors/add'
-      path: '/monitors/add'
-      fullPath: '/monitors/add'
-      preLoaderRoute: typeof DashboardLayoutMonitorsAddRouteImport
+    '/_dashboardLayout/monitors/new': {
+      id: '/_dashboardLayout/monitors/new'
+      path: '/monitors/new'
+      fullPath: '/monitors/new'
+      preLoaderRoute: typeof DashboardLayoutMonitorsNewRouteImport
       parentRoute: typeof DashboardLayoutRouteRoute
     }
     '/_dashboardLayout/monitors/$monitorId': {
@@ -442,7 +442,7 @@ declare module '@tanstack/react-router' {
 interface DashboardLayoutRouteRouteChildren {
   DashboardLayoutAccountAccountViewRoute: typeof DashboardLayoutAccountAccountViewRoute
   DashboardLayoutMonitorsMonitorIdRoute: typeof DashboardLayoutMonitorsMonitorIdRoute
-  DashboardLayoutMonitorsAddRoute: typeof DashboardLayoutMonitorsAddRoute
+  DashboardLayoutMonitorsNewRoute: typeof DashboardLayoutMonitorsNewRoute
   DashboardLayoutOrganizationOrganizationViewRoute: typeof DashboardLayoutOrganizationOrganizationViewRoute
   DashboardLayoutIntegrationsIndexRoute: typeof DashboardLayoutIntegrationsIndexRoute
   DashboardLayoutMonitorsIndexRoute: typeof DashboardLayoutMonitorsIndexRoute
@@ -452,7 +452,7 @@ const DashboardLayoutRouteRouteChildren: DashboardLayoutRouteRouteChildren = {
   DashboardLayoutAccountAccountViewRoute:
     DashboardLayoutAccountAccountViewRoute,
   DashboardLayoutMonitorsMonitorIdRoute: DashboardLayoutMonitorsMonitorIdRoute,
-  DashboardLayoutMonitorsAddRoute: DashboardLayoutMonitorsAddRoute,
+  DashboardLayoutMonitorsNewRoute: DashboardLayoutMonitorsNewRoute,
   DashboardLayoutOrganizationOrganizationViewRoute:
     DashboardLayoutOrganizationOrganizationViewRoute,
   DashboardLayoutIntegrationsIndexRoute: DashboardLayoutIntegrationsIndexRoute,
