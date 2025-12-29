@@ -96,11 +96,11 @@ export function MonitorsTable({ data, onRowClick }: MonitorTableProps) {
 				header: ({ column }) => (
 					<Button
 						variant="ghost"
-						className="-ml-4 h-8 text-xs font-semibold text-muted-foreground hover:text-foreground"
+						className="-ml-3 h-7 text-[11px] font-semibold text-muted-foreground hover:text-foreground"
 						onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
 					>
 						Monitor
-						<ArrowUpDown className="ml-2 h-3 w-3 opacity-50" />
+						<ArrowUpDown className="ml-1.5 size-2.5 opacity-40" />
 					</Button>
 				),
 				cell: ({ row }) => {
@@ -139,11 +139,11 @@ export function MonitorsTable({ data, onRowClick }: MonitorTableProps) {
 				header: ({ column }) => (
 					<Button
 						variant="ghost"
-						className="-ml-4 h-8 text-xs font-semibold text-muted-foreground hover:text-foreground"
+						className="-ml-3 h-7 text-[11px] font-semibold text-muted-foreground hover:text-foreground"
 						onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
 					>
 						Uptime (24h)
-						<ArrowUpDown className="ml-2 h-3 w-3 opacity-50" />
+						<ArrowUpDown className="ml-1.5 size-2.5 opacity-40" />
 					</Button>
 				),
 				cell: ({ getValue }) => (
@@ -160,13 +160,13 @@ export function MonitorsTable({ data, onRowClick }: MonitorTableProps) {
 					<div className="text-left">
 						<Button
 							variant="ghost"
-							className="-mr-4 h-8 text-xs font-semibold text-muted-foreground hover:text-foreground"
+							className="-mr-3 h-7 text-[11px] font-semibold text-muted-foreground hover:text-foreground"
 							onClick={() =>
 								column.toggleSorting(column.getIsSorted() === "asc")
 							}
 						>
 							Latency (24h)
-							<ArrowUpDown className="ml-2 h-3 w-3 opacity-50" />
+							<ArrowUpDown className="ml-1.5 size-2.5 opacity-40" />
 						</Button>
 					</div>
 				),
@@ -218,40 +218,40 @@ export function MonitorsTable({ data, onRowClick }: MonitorTableProps) {
 	});
 
 	return (
-		<div className="w-full space-y-4">
+		<div className="w-full space-y-3">
 			{/* --- Toolbar --- */}
-			<div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
-				<div className="relative w-full sm:w-[300px]">
-					<Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+			<div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center justify-between">
+				<div className="relative w-full sm:w-[280px]">
+					<Search className="absolute left-2 top-2 size-3.5 text-muted-foreground/60" />
 					<input
 						type="text"
 						placeholder="Search monitors..."
 						value={searchQuery}
 						onChange={(e) => setSearchQuery(e.target.value)}
-						className="flex h-9 w-full rounded-md border border-input bg-background pl-9 pr-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+						className="flex h-8 w-full rounded-md border border-input bg-transparent pl-7 pr-2.5 py-1.5 text-[13px] transition-all duration-100 placeholder:text-muted-foreground/60 focus-visible:outline-none focus-visible:border-primary focus-visible:ring-1 focus-visible:ring-primary/30"
 					/>
 				</div>
 
-				<div className="flex items-center gap-2 w-full sm:w-auto">
+				<div className="flex items-center gap-1.5 w-full sm:w-auto">
 					<Button
 						variant={issuesOnly ? "secondary" : "outline"}
 						size="sm"
 						onClick={() => setIssuesOnly(!issuesOnly)}
 						className={cn(
-							"h-9 gap-2 transition-all",
+							"h-8 gap-1.5 transition-all duration-100",
 							issuesOnly
 								? "bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100 dark:bg-rose-900/20 dark:text-rose-400 dark:border-rose-900"
 								: "text-muted-foreground",
 						)}
 					>
-						<AlertOctagon className="h-4 w-4" />
-						<span>Issues Only</span>
+						<AlertOctagon className="size-3" />
+						<span className="text-[13px]">Issues Only</span>
 						{issuesOnly && (
 							<Badge
 								variant="secondary"
-								className="ml-1 size-4 bg-rose-200 text-rose-800 dark:bg-rose-900 dark:text-rose-300"
+								className="ml-0.5 size-3.5 p-0 bg-rose-200 text-rose-800 dark:bg-rose-900 dark:text-rose-300"
 							>
-								<X className="size-3" />
+								<X className="size-2.5" />
 							</Badge>
 						)}
 					</Button>
@@ -262,18 +262,18 @@ export function MonitorsTable({ data, onRowClick }: MonitorTableProps) {
 								variant="outline"
 								size="sm"
 								className={cn(
-									"h-9 gap-2 border-dashed",
+									"h-8 gap-1.5 border-dashed",
 									statusFilter.size > 0
 										? "text-foreground border-secondary/60 focus:bg-secondary/10 bg-secondary/10 border-solid"
 										: "text-muted-foreground",
 								)}
 							>
-								<Filter className="h-4 w-4" />
-								Status
+								<Filter className="size-3" />
+								<span className="text-[13px]">Status</span>
 								{statusFilter.size > 0 && (
 									<Badge
 										variant="secondary"
-										className="ml-auto h-5 min-w-5 px-1 rounded-full text-[10px]"
+										className="ml-auto h-4 min-w-4 px-1 rounded-full text-[9px]"
 									>
 										{statusFilter.size}
 									</Badge>
@@ -321,7 +321,7 @@ export function MonitorsTable({ data, onRowClick }: MonitorTableProps) {
 			</div>
 
 			{/* --- Table --- */}
-			<div className="rounded-xl border bg-card shadow-sm overflow-hidden">
+			<div className="rounded-md border bg-card overflow-hidden">
 				<Table
 					className="table-fixed w-full"
 					style={{ minWidth: table.getTotalSize() }}
@@ -330,20 +330,20 @@ export function MonitorsTable({ data, onRowClick }: MonitorTableProps) {
 						{table.getHeaderGroups().map((headerGroup) => (
 							<TableRow
 								key={headerGroup.id}
-								className="hover:bg-transparent border-b border-border/60 bg-muted/30"
+								className="hover:bg-transparent border-b border-border/50 bg-muted/20"
 							>
 								{headerGroup.headers.map((header) => (
 									<TableHead
 										key={header.id}
-										className="sm:px-5 h-10"
+										className="sm:px-4 h-8 text-[11px]"
 										style={{ width: header.getSize() }}
 									>
 										{header.isPlaceholder
 											? null
 											: flexRender(
-													header.column.columnDef.header,
-													header.getContext(),
-												)}
+												header.column.columnDef.header,
+												header.getContext(),
+											)}
 									</TableHead>
 								))}
 							</TableRow>
@@ -356,12 +356,12 @@ export function MonitorsTable({ data, onRowClick }: MonitorTableProps) {
 									key={row.id}
 									data-state={row.getIsSelected() && "selected"}
 									onClick={() => onRowClick?.(row.original)}
-									className="cursor-pointer border-b border-border/40 hover:bg-muted/40 transition-[background-color]"
+									className="cursor-pointer border-b border-border/30 hover:bg-muted/30 transition-colors duration-75"
 								>
 									{row.getVisibleCells().map((cell) => (
 										<TableCell
 											key={cell.id}
-											className="sm:px-4 py-3"
+											className="sm:px-4 py-2"
 											style={{ width: cell.column.getSize() }}
 										>
 											{flexRender(
@@ -376,19 +376,20 @@ export function MonitorsTable({ data, onRowClick }: MonitorTableProps) {
 							<TableRow>
 								<TableCell
 									colSpan={columns.length}
-									className="h-32 text-center"
+									className="h-24 text-center"
 								>
-									<div className="flex flex-col items-center justify-center gap-2 text-muted-foreground">
-										<div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
-											<Search className="h-4 w-4 opacity-50" />
+									<div className="flex flex-col items-center justify-center gap-1.5 text-muted-foreground">
+										<div className="size-6 rounded-full bg-muted flex items-center justify-center">
+											<Search className="size-3 opacity-40" />
 										</div>
-										<p className="text-sm">
+										<p className="text-[13px]">
 											No monitors found matching your criteria.
 										</p>
 										{(statusFilter.size > 0 || issuesOnly || searchQuery) && (
 											<Button
 												variant="link"
 												size="sm"
+												className="text-[13px] h-auto p-0"
 												onClick={() => {
 													setStatusFilter(new Set());
 													setSearchQuery("");
@@ -407,8 +408,8 @@ export function MonitorsTable({ data, onRowClick }: MonitorTableProps) {
 			</div>
 
 			{/* --- Footer --- */}
-			<div className="flex items-center justify-between px-1">
-				<div className="text-xs text-muted-foreground">
+			<div className="flex items-center justify-between px-0.5">
+				<div className="text-[11px] text-muted-foreground/70">
 					Showing{" "}
 					<span className="font-medium text-foreground">
 						{filteredData.length}
@@ -416,7 +417,7 @@ export function MonitorsTable({ data, onRowClick }: MonitorTableProps) {
 					of <span className="font-medium text-foreground">{data.length}</span>{" "}
 					monitors
 				</div>
-				<div className="text-[10px] text-muted-foreground/60 font-mono uppercase tracking-widest">
+				<div className="text-[9px] text-muted-foreground/50 font-mono uppercase tracking-widest">
 					Live Updates
 				</div>
 			</div>
