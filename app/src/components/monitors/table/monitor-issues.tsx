@@ -2,7 +2,6 @@ import {
 	AlertTriangle,
 	AlertCircle,
 	Info,
-	CheckCircle2,
 	Minus,
 } from "lucide-react";
 import {
@@ -12,7 +11,7 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import type { MonitorIssue } from "./monitor-types";
+import type { MonitorIssue } from "@/modules/monitors/monitors.zod";
 import { Badge } from "@/components/ui/badge";
 
 interface MonitorIssuesProps {

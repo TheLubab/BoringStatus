@@ -1,4 +1,5 @@
 import { createInsertSchema } from "drizzle-zod";
+import type { InferSelectModel } from "drizzle-orm";
 import { z } from "zod";
 
 import { monitor } from "./monitors.schema";
@@ -128,3 +129,19 @@ export const insertMonitorSchema = z
 	);
 
 export type InsertMonitor = z.infer<typeof insertMonitorSchema>;
+
+// DASHBOARD TYPES (Read Models)
+
+export type Monitor = InferSelectModel<typeof monitor>;
+
+export interface MonitorIssue {
+	id: string;
+	severity: "high" | "medium" | "low";
+	message: string;
+}
+
+export interface DashboardMonitor extends Monitor {
+	uptime: number;
+	latencyHistory: number[];
+	issues: MonitorIssue[];
+}

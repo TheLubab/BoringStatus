@@ -42,11 +42,11 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
 import type { NotificationChannel } from "@/db/schema";
+import { cn } from "@/lib/utils";
 import { createChannel } from "@/modules/integrations/integrations.api";
 import {
-	InsertNotificationChannel,
+	type InsertNotificationChannel,
 	insertNotificationChannelSchema,
 } from "@/modules/integrations/integrations.zod";
 
@@ -241,7 +241,7 @@ export function ChannelAddForm({
 		const newChannel = {
 			...values,
 			config,
-			id: crypto.randomUUID()
+			id: crypto.randomUUID(),
 		};
 		// @ts-ignore
 		onChannelCreate(newChannel);

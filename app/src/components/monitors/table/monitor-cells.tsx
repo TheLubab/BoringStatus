@@ -1,5 +1,6 @@
 import { ExternalLink, MoreHorizontal } from "lucide-react";
 import { Area, AreaChart, ResponsiveContainer } from "recharts";
+
 import { Button } from "@/components/ui/button";
 import { ChartContainer } from "@/components/ui/chart";
 import {
@@ -10,7 +11,7 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-import type { MonitorData } from "./monitor-types";
+import type { DashboardMonitor } from "@/modules/monitors/monitors.zod";
 
 export const MonitorNameCell = ({
 	name,
@@ -48,7 +49,11 @@ export const MonitorNameCell = ({
 	);
 };
 
-export const UptimeCell = ({ uptime }: { uptime: number }) => {
+export const UptimeCell = ({ uptime }: { uptime?: number }) => {
+	if (uptime === undefined || uptime === null) {
+		return <span className="font-mono font-bold text-xs text-muted-foreground">-</span>;
+	}
+
 	let colorClass = "text-emerald-600 dark:text-emerald-400";
 	if (uptime < 98) colorClass = "text-amber-600 dark:text-amber-400";
 	if (uptime < 95) colorClass = "text-rose-600 dark:text-rose-400";
@@ -64,8 +69,8 @@ export const ActionsCell = ({
 	monitor,
 	onViewDetails,
 }: {
-	monitor: MonitorData;
-	onViewDetails?: (m: MonitorData) => void;
+	monitor: DashboardMonitor;
+	onViewDetails?: (m: DashboardMonitor) => void;
 }) => (
 	<div className="flex justify-end">
 		<DropdownMenu>

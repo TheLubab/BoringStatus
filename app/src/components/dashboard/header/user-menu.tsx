@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import type { User } from "better-auth";
 import { CreditCard, LogOut, Settings, Users } from "lucide-react";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
 	DropdownMenu,
@@ -27,7 +28,7 @@ export function UserMenu({
 
 	if (!user) {
 		return (
-			<Link to="/auth/login">
+			<Link to="/auth/sign-in">
 				<button
 					className="text-sm font-medium text-primary hover:underline"
 					type="button"

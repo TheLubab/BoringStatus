@@ -78,12 +78,22 @@ function MonitorDetailsPage() {
 	const router = useRouter();
 
 	// 1. Fetch Real Data
-	const { data } = useSuspenseQuery({
+	const { data: monitorData } = useSuspenseQuery({
 		queryKey: ["monitor", monitorId],
 		queryFn: () => getMonitorById({ data: { id: monitorId } }),
 	});
 
-	const { monitor, chart, recentChecks, stats, connectedValue } = data;
+	const monitor = monitorData;
+	const connectedValue = monitorData.channelIds || [];
+
+	// Mock unavailable data for now
+	const chart: any[] = [];
+	const recentChecks: any[] = [];
+	const stats = {
+		avgLatency: 0,
+		uptime24h: 100,
+		uptime30d: 100,
+	};
 
 	const isActive = monitor.active;
 

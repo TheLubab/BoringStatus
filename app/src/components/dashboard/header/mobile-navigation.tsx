@@ -3,8 +3,8 @@ import { Activity, Megaphone, PanelTop, Webhook } from "lucide-react";
 
 const NAV_ITEMS = [
 	{ label: "Monitors", href: "/monitors", icon: Activity },
-	{ label: "Incidents", href: "/incidents", icon: Megaphone },
-	{ label: "Status Pages", href: "/status-pages", icon: PanelTop },
+	//	{ label: "Incidents", href: "/incidents", icon: Megaphone },
+	//	{ label: "Status Pages", href: "/status-pages", icon: PanelTop },
 	{ label: "Integrations", href: "/integrations", icon: Webhook },
 ];
 
@@ -22,7 +22,7 @@ export function MobileNavigation() {
 						to={item.href}
 						className="flex items-center gap-3 rounded-md px-3 py-3 text-sm font-medium transition hover:bg-frame-foreground/5"
 						activeProps={{
-							className: "bg-primary/10 font-bold"
+							className: "bg-primary/10 font-bold",
 						}}
 					>
 						<item.icon className="size-4" />

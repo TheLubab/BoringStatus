@@ -12,7 +12,6 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteRouteImport } from './routes/auth/route'
 import { Route as DashboardLayoutRouteRouteImport } from './routes/_dashboardLayout/route'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as StatusSlugRouteImport } from './routes/status/$slug'
 import { Route as AuthTwoFactorRouteImport } from './routes/auth/two-factor'
 import { Route as AuthSignUpRouteImport } from './routes/auth/sign-up'
 import { Route as AuthSignOutRouteImport } from './routes/auth/sign-out'
@@ -24,12 +23,9 @@ import { Route as AuthForgotPasswordRouteImport } from './routes/auth/forgot-pas
 import { Route as AuthEmailOtpRouteImport } from './routes/auth/email-otp'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
 import { Route as AuthAcceptInvitationRouteImport } from './routes/auth/accept-invitation'
-import { Route as DashboardLayoutStatusPagesIndexRouteImport } from './routes/_dashboardLayout/status-pages/index'
 import { Route as DashboardLayoutMonitorsIndexRouteImport } from './routes/_dashboardLayout/monitors/index'
 import { Route as DashboardLayoutIntegrationsIndexRouteImport } from './routes/_dashboardLayout/integrations/index'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
-import { Route as DashboardLayoutStatusPagesCreateRouteImport } from './routes/_dashboardLayout/status-pages/create'
-import { Route as DashboardLayoutStatusPagesStatusPageIdRouteImport } from './routes/_dashboardLayout/status-pages/$statusPageId'
 import { Route as DashboardLayoutOrganizationOrganizationViewRouteImport } from './routes/_dashboardLayout/organization/$organizationView'
 import { Route as DashboardLayoutMonitorsAddRouteImport } from './routes/_dashboardLayout/monitors/add'
 import { Route as DashboardLayoutMonitorsMonitorIdRouteImport } from './routes/_dashboardLayout/monitors/$monitorId'
@@ -47,11 +43,6 @@ const DashboardLayoutRouteRoute = DashboardLayoutRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const StatusSlugRoute = StatusSlugRouteImport.update({
-  id: '/status/$slug',
-  path: '/status/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthTwoFactorRoute = AuthTwoFactorRouteImport.update({
@@ -109,12 +100,6 @@ const AuthAcceptInvitationRoute = AuthAcceptInvitationRouteImport.update({
   path: '/accept-invitation',
   getParentRoute: () => AuthRouteRoute,
 } as any)
-const DashboardLayoutStatusPagesIndexRoute =
-  DashboardLayoutStatusPagesIndexRouteImport.update({
-    id: '/status-pages/',
-    path: '/status-pages/',
-    getParentRoute: () => DashboardLayoutRouteRoute,
-  } as any)
 const DashboardLayoutMonitorsIndexRoute =
   DashboardLayoutMonitorsIndexRouteImport.update({
     id: '/monitors/',
@@ -132,18 +117,6 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DashboardLayoutStatusPagesCreateRoute =
-  DashboardLayoutStatusPagesCreateRouteImport.update({
-    id: '/status-pages/create',
-    path: '/status-pages/create',
-    getParentRoute: () => DashboardLayoutRouteRoute,
-  } as any)
-const DashboardLayoutStatusPagesStatusPageIdRoute =
-  DashboardLayoutStatusPagesStatusPageIdRouteImport.update({
-    id: '/status-pages/$statusPageId',
-    path: '/status-pages/$statusPageId',
-    getParentRoute: () => DashboardLayoutRouteRoute,
-  } as any)
 const DashboardLayoutOrganizationOrganizationViewRoute =
   DashboardLayoutOrganizationOrganizationViewRouteImport.update({
     id: '/organization/$organizationView',
@@ -183,17 +156,13 @@ export interface FileRoutesByFullPath {
   '/auth/sign-out': typeof AuthSignOutRoute
   '/auth/sign-up': typeof AuthSignUpRoute
   '/auth/two-factor': typeof AuthTwoFactorRoute
-  '/status/$slug': typeof StatusSlugRoute
   '/account/$accountView': typeof DashboardLayoutAccountAccountViewRoute
   '/monitors/$monitorId': typeof DashboardLayoutMonitorsMonitorIdRoute
   '/monitors/add': typeof DashboardLayoutMonitorsAddRoute
   '/organization/$organizationView': typeof DashboardLayoutOrganizationOrganizationViewRoute
-  '/status-pages/$statusPageId': typeof DashboardLayoutStatusPagesStatusPageIdRoute
-  '/status-pages/create': typeof DashboardLayoutStatusPagesCreateRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/integrations': typeof DashboardLayoutIntegrationsIndexRoute
   '/monitors': typeof DashboardLayoutMonitorsIndexRoute
-  '/status-pages': typeof DashboardLayoutStatusPagesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -209,17 +178,13 @@ export interface FileRoutesByTo {
   '/auth/sign-out': typeof AuthSignOutRoute
   '/auth/sign-up': typeof AuthSignUpRoute
   '/auth/two-factor': typeof AuthTwoFactorRoute
-  '/status/$slug': typeof StatusSlugRoute
   '/account/$accountView': typeof DashboardLayoutAccountAccountViewRoute
   '/monitors/$monitorId': typeof DashboardLayoutMonitorsMonitorIdRoute
   '/monitors/add': typeof DashboardLayoutMonitorsAddRoute
   '/organization/$organizationView': typeof DashboardLayoutOrganizationOrganizationViewRoute
-  '/status-pages/$statusPageId': typeof DashboardLayoutStatusPagesStatusPageIdRoute
-  '/status-pages/create': typeof DashboardLayoutStatusPagesCreateRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/integrations': typeof DashboardLayoutIntegrationsIndexRoute
   '/monitors': typeof DashboardLayoutMonitorsIndexRoute
-  '/status-pages': typeof DashboardLayoutStatusPagesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -237,17 +202,13 @@ export interface FileRoutesById {
   '/auth/sign-out': typeof AuthSignOutRoute
   '/auth/sign-up': typeof AuthSignUpRoute
   '/auth/two-factor': typeof AuthTwoFactorRoute
-  '/status/$slug': typeof StatusSlugRoute
   '/_dashboardLayout/account/$accountView': typeof DashboardLayoutAccountAccountViewRoute
   '/_dashboardLayout/monitors/$monitorId': typeof DashboardLayoutMonitorsMonitorIdRoute
   '/_dashboardLayout/monitors/add': typeof DashboardLayoutMonitorsAddRoute
   '/_dashboardLayout/organization/$organizationView': typeof DashboardLayoutOrganizationOrganizationViewRoute
-  '/_dashboardLayout/status-pages/$statusPageId': typeof DashboardLayoutStatusPagesStatusPageIdRoute
-  '/_dashboardLayout/status-pages/create': typeof DashboardLayoutStatusPagesCreateRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/_dashboardLayout/integrations/': typeof DashboardLayoutIntegrationsIndexRoute
   '/_dashboardLayout/monitors/': typeof DashboardLayoutMonitorsIndexRoute
-  '/_dashboardLayout/status-pages/': typeof DashboardLayoutStatusPagesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -265,17 +226,13 @@ export interface FileRouteTypes {
     | '/auth/sign-out'
     | '/auth/sign-up'
     | '/auth/two-factor'
-    | '/status/$slug'
     | '/account/$accountView'
     | '/monitors/$monitorId'
     | '/monitors/add'
     | '/organization/$organizationView'
-    | '/status-pages/$statusPageId'
-    | '/status-pages/create'
     | '/api/auth/$'
     | '/integrations'
     | '/monitors'
-    | '/status-pages'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -291,17 +248,13 @@ export interface FileRouteTypes {
     | '/auth/sign-out'
     | '/auth/sign-up'
     | '/auth/two-factor'
-    | '/status/$slug'
     | '/account/$accountView'
     | '/monitors/$monitorId'
     | '/monitors/add'
     | '/organization/$organizationView'
-    | '/status-pages/$statusPageId'
-    | '/status-pages/create'
     | '/api/auth/$'
     | '/integrations'
     | '/monitors'
-    | '/status-pages'
   id:
     | '__root__'
     | '/'
@@ -318,24 +271,19 @@ export interface FileRouteTypes {
     | '/auth/sign-out'
     | '/auth/sign-up'
     | '/auth/two-factor'
-    | '/status/$slug'
     | '/_dashboardLayout/account/$accountView'
     | '/_dashboardLayout/monitors/$monitorId'
     | '/_dashboardLayout/monitors/add'
     | '/_dashboardLayout/organization/$organizationView'
-    | '/_dashboardLayout/status-pages/$statusPageId'
-    | '/_dashboardLayout/status-pages/create'
     | '/api/auth/$'
     | '/_dashboardLayout/integrations/'
     | '/_dashboardLayout/monitors/'
-    | '/_dashboardLayout/status-pages/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DashboardLayoutRouteRoute: typeof DashboardLayoutRouteRouteWithChildren
   AuthRouteRoute: typeof AuthRouteRouteWithChildren
-  StatusSlugRoute: typeof StatusSlugRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
@@ -360,13 +308,6 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/status/$slug': {
-      id: '/status/$slug'
-      path: '/status/$slug'
-      fullPath: '/status/$slug'
-      preLoaderRoute: typeof StatusSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/two-factor': {
@@ -446,13 +387,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthAcceptInvitationRouteImport
       parentRoute: typeof AuthRouteRoute
     }
-    '/_dashboardLayout/status-pages/': {
-      id: '/_dashboardLayout/status-pages/'
-      path: '/status-pages'
-      fullPath: '/status-pages'
-      preLoaderRoute: typeof DashboardLayoutStatusPagesIndexRouteImport
-      parentRoute: typeof DashboardLayoutRouteRoute
-    }
     '/_dashboardLayout/monitors/': {
       id: '/_dashboardLayout/monitors/'
       path: '/monitors'
@@ -473,20 +407,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/auth/$'
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
-    }
-    '/_dashboardLayout/status-pages/create': {
-      id: '/_dashboardLayout/status-pages/create'
-      path: '/status-pages/create'
-      fullPath: '/status-pages/create'
-      preLoaderRoute: typeof DashboardLayoutStatusPagesCreateRouteImport
-      parentRoute: typeof DashboardLayoutRouteRoute
-    }
-    '/_dashboardLayout/status-pages/$statusPageId': {
-      id: '/_dashboardLayout/status-pages/$statusPageId'
-      path: '/status-pages/$statusPageId'
-      fullPath: '/status-pages/$statusPageId'
-      preLoaderRoute: typeof DashboardLayoutStatusPagesStatusPageIdRouteImport
-      parentRoute: typeof DashboardLayoutRouteRoute
     }
     '/_dashboardLayout/organization/$organizationView': {
       id: '/_dashboardLayout/organization/$organizationView'
@@ -524,11 +444,8 @@ interface DashboardLayoutRouteRouteChildren {
   DashboardLayoutMonitorsMonitorIdRoute: typeof DashboardLayoutMonitorsMonitorIdRoute
   DashboardLayoutMonitorsAddRoute: typeof DashboardLayoutMonitorsAddRoute
   DashboardLayoutOrganizationOrganizationViewRoute: typeof DashboardLayoutOrganizationOrganizationViewRoute
-  DashboardLayoutStatusPagesStatusPageIdRoute: typeof DashboardLayoutStatusPagesStatusPageIdRoute
-  DashboardLayoutStatusPagesCreateRoute: typeof DashboardLayoutStatusPagesCreateRoute
   DashboardLayoutIntegrationsIndexRoute: typeof DashboardLayoutIntegrationsIndexRoute
   DashboardLayoutMonitorsIndexRoute: typeof DashboardLayoutMonitorsIndexRoute
-  DashboardLayoutStatusPagesIndexRoute: typeof DashboardLayoutStatusPagesIndexRoute
 }
 
 const DashboardLayoutRouteRouteChildren: DashboardLayoutRouteRouteChildren = {
@@ -538,12 +455,8 @@ const DashboardLayoutRouteRouteChildren: DashboardLayoutRouteRouteChildren = {
   DashboardLayoutMonitorsAddRoute: DashboardLayoutMonitorsAddRoute,
   DashboardLayoutOrganizationOrganizationViewRoute:
     DashboardLayoutOrganizationOrganizationViewRoute,
-  DashboardLayoutStatusPagesStatusPageIdRoute:
-    DashboardLayoutStatusPagesStatusPageIdRoute,
-  DashboardLayoutStatusPagesCreateRoute: DashboardLayoutStatusPagesCreateRoute,
   DashboardLayoutIntegrationsIndexRoute: DashboardLayoutIntegrationsIndexRoute,
   DashboardLayoutMonitorsIndexRoute: DashboardLayoutMonitorsIndexRoute,
-  DashboardLayoutStatusPagesIndexRoute: DashboardLayoutStatusPagesIndexRoute,
 }
 
 const DashboardLayoutRouteRouteWithChildren =
@@ -585,7 +498,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DashboardLayoutRouteRoute: DashboardLayoutRouteRouteWithChildren,
   AuthRouteRoute: AuthRouteRouteWithChildren,
-  StatusSlugRoute: StatusSlugRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
 export const routeTree = rootRouteImport

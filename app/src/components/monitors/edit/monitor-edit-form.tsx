@@ -3,10 +3,10 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
-import { insertMonitorSchema, type MonitorFormValues } from "@/db/zod";
+import { insertMonitorSchema, type InsertMonitor } from "@/modules/monitors/monitors.zod";
 import { MonitorStepAlerting } from "@/components/monitors/create/monitor-step-alerting";
 import { MonitorStepGeneral } from "@/components/monitors/create/monitor-step-general";
-import { updateMonitor } from "@/functions/monitor";
+import { updateMonitor } from "@/modules/monitors/monitors.api";
 import { useRouter } from "@tanstack/react-router";
 import { Loader2, Save } from "lucide-react";
 import { useState } from "react";
@@ -20,36 +20,30 @@ export function MonitorEditForm({ monitor, connectedChannelIds }: MonitorEditFor
     const router = useRouter();
     const [isSaving, setIsSaving] = useState(false);
 
-    const form = useForm<MonitorFormValues>({
-        // Cast as any to avoid strict type mismatches between Zod schema output and RHF internal types
+    const form = useForm<InsertMonitor>({
+        // Cast as any to avoid strict type mismatches between Zod schema output and RHF internal types(discriminated unions are tricky)
         resolver: zodResolver(insertMonitorSchema) as any,
         defaultValues: {
-            type: monitor.type,
+            type: monitor.type as any,
             name: monitor.name,
             target: monitor.target,
             active: monitor.active,
             frequency: monitor.frequency,
-            timeout: monitor.timeout || 20,
-            retries: monitor.retries || 0,
-            method: monitor.method || "GET",
-            expectedStatus: monitor.expectedStatus || "200-299",
-            headers: monitor.headers || [],
-            port: monitor.port || (monitor.type === "http" ? 443 : 80),
-            alertOnDown: monitor.alertOnDown,
-            alertOnRecovery: monitor.alertOnRecovery,
+            timeout: monitor.timeout,
+            config: monitor.config as any,
+            alertRules: monitor.alertRules as any,
             channelIds: connectedChannelIds,
-            keyword_found: monitor.keyword_found || undefined,
-            keyword_missing: monitor.keyword_missing || undefined,
+            regions: monitor.regions || ["default"],
         },
     });
 
-    const onSubmit = async (values: MonitorFormValues) => {
+    const onSubmit = async (values: InsertMonitor) => {
         setIsSaving(true);
         try {
             await updateMonitor({
                 data: {
-                    monitorId: monitor.id,
-                    ...values,
+                    id: monitor.id,
+                    data: values, // properly nested
                 },
             });
             toast.success("Monitor updated successfully");

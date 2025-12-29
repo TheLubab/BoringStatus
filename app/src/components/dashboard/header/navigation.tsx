@@ -3,8 +3,8 @@ import { Activity, Megaphone, PanelTop, Webhook } from "lucide-react";
 
 const NAV_ITEMS = [
 	{ label: "Monitors", href: "/monitors", icon: Activity },
-	{ label: "Incidents", href: "/incidents", icon: Megaphone },
-	{ label: "Status Pages", href: "/status-pages", icon: PanelTop },
+	//	{ label: "Incidents", href: "/incidents", icon: Megaphone },
+	//	{ label: "Status Pages", href: "/status-pages", icon: PanelTop },
 	{ label: "Integrations", href: "/integrations", icon: Webhook },
 ];
 

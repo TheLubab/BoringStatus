@@ -8,11 +8,13 @@ import {
 	RefreshCw,
 	Webhook,
 } from "lucide-react";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { getNotificationChannelsByOrg } from "@/modules/integrations/integrations.api";
+
 import { ChannelAddDialog } from "./channel-add-dialog";
 import { ChannelList } from "./channel-list";
-import { getNotificationChannelsByOrg } from "@/modules/integrations/integrations.api";
 
 export function IntegrationsManager() {
 	const {

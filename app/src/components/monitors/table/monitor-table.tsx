@@ -38,7 +38,7 @@ import {
 	UptimeCell,
 } from "./monitor-cells";
 import { MonitorIssues } from "./monitor-issues";
-import type { DashboardMonitor } from "@/functions/monitor";
+import type { DashboardMonitor, TcpConfig } from "@/modules/monitors/monitors.zod";
 
 interface MonitorTableProps {
 	data: DashboardMonitor[];
@@ -98,15 +98,17 @@ export function MonitorsTable({ data, onRowClick }: MonitorTableProps) {
 						<ArrowUpDown className="ml-2 h-3 w-3 opacity-50" />
 					</Button>
 				),
-				cell: ({ row }) => (
-					<MonitorNameCell
-						name={row.original.name}
-						url={
-							row.original.target +
-							(row.original.port ? `:${row.original.port}` : "")
+				cell: ({ row }) => {
+					const m = row.original;
+					let url = m.target;
+					if (m.type === "tcp") {
+						const config = m.config as TcpConfig;
+						if (config.port) {
+							url += `:${config.port}`;
 						}
-					/>
-				),
+					}
+					return <MonitorNameCell name={m.name} url={url} />;
+				},
 			}),
 
 			columnHelper.accessor("status", {
