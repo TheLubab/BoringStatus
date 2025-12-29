@@ -5,7 +5,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "@/lib/utils";
 
-const radioCardGroupVariants = cva("grid gap-3", {
+const radioCardGroupVariants = cva("grid gap-2", {
 	variants: {
 		variant: {
 			default: "grid-cols-1",
@@ -18,12 +18,13 @@ const radioCardGroupVariants = cva("grid gap-3", {
 });
 
 const radioCardVariants = cva(
-	"group relative flex w-full rounded-xl border-2 bg-card p-4 text-left shadow-sm transition-all outline-none hover:border-muted-foreground/50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 data-[state=checked]:border-primary data-[state=checked]:bg-primary/5 data-[state=checked]:ring-1 data-[state=checked]:ring-primary disabled:cursor-not-allowed disabled:opacity-50",
+	"group relative flex w-full rounded-md border bg-card text-left transition-all duration-100 ease-out outline-none hover:border-foreground/25 focus-visible:ring-1 focus-visible:ring-primary/40 data-[state=checked]:border-primary data-[state=checked]:bg-primary/5 active:scale-[0.99] active:transition-none disabled:cursor-not-allowed disabled:opacity-40",
 	{
 		variants: {
 			variant: {
-				default: "flex-row items-start gap-4",
-				centered: "flex-col items-center justify-center text-center gap-2 py-6",
+				default: "flex-row items-start gap-3 p-3",
+				centered:
+					"flex-col items-center justify-center text-center gap-1.5 py-4 px-3",
 			},
 		},
 		defaultVariants: {
@@ -34,7 +35,7 @@ const radioCardVariants = cva(
 
 interface RadioCardGroupProps
 	extends React.ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Root>,
-	VariantProps<typeof radioCardGroupVariants> { }
+		VariantProps<typeof radioCardGroupVariants> {}
 
 function RadioCardGroup({ className, variant, ...props }: RadioCardGroupProps) {
 	return (
@@ -49,7 +50,7 @@ function RadioCardGroup({ className, variant, ...props }: RadioCardGroupProps) {
 // Fixed: Correctly extending the Primitive Item props
 interface RadioCardProps
 	extends React.ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Item>,
-	VariantProps<typeof radioCardVariants> {
+		VariantProps<typeof radioCardVariants> {
 	title: string;
 	description?: string;
 	icon?: LucideIcon | React.ReactNode;
@@ -85,20 +86,20 @@ const RadioCard = React.forwardRef<
 				{Icon && (
 					<div
 						className={cn(
-							"shrink-0 text-muted-foreground group-data-[state=checked]:text-primary",
-							variant === "centered" ? "mb-1" : "mt-1",
+							"shrink-0 text-muted-foreground group-data-[state=checked]:text-primary transition-colors duration-100",
+							variant === "centered" ? "mb-0.5" : "mt-0.5",
 						)}
 					>
-						{typeof Icon === "function" ? <Icon className="size-5" /> : Icon}
+						{typeof Icon === "function" ? <Icon className="size-4" /> : Icon}
 					</div>
 				)}
 
-				<div className="flex flex-1 flex-col gap-1 my-auto">
-					<span className="text-sm font-bold leading-none tracking-tight">
+				<div className="flex flex-1 flex-col gap-0.5 my-auto">
+					<span className="text-[13px] font-semibold leading-none tracking-tight">
 						{title}
 					</span>
 					{description && (
-						<p className="text-sm text-muted-foreground leading-relaxed">
+						<p className="text-xs text-muted-foreground/70 leading-relaxed">
 							{description}
 						</p>
 					)}
@@ -107,13 +108,13 @@ const RadioCard = React.forwardRef<
 				{showRadio && (
 					<div
 						className={cn(
-							"flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 border-muted transition-colors group-data-[state=checked]:border-primary",
-							variant === "centered" && "mt-2",
+							"flex h-4 w-4 shrink-0 items-center justify-center rounded-full border border-input transition-colors duration-100 group-data-[state=checked]:border-primary group-data-[state=checked]:bg-primary/10",
+							variant === "centered" && "mt-1.5",
 						)}
 						aria-hidden="true"
 					>
 						<RadioGroupPrimitive.Indicator className="flex items-center justify-center">
-							<CircleIcon className="size-2.5 fill-primary text-primary" />
+							<CircleIcon className="size-2 fill-primary text-primary" />
 						</RadioGroupPrimitive.Indicator>
 					</div>
 				)}
@@ -121,7 +122,7 @@ const RadioCard = React.forwardRef<
 					(typeof RadioCircle === "function" ? <RadioCircle /> : RadioCircle)}
 
 				{children && (
-					<div className="hidden mt-4 w-full border-t pt-4 animate-in fade-in zoom-in-95 group-data-[state=checked]:block">
+					<div className="hidden mt-3 w-full border-t pt-3 animate-in fade-in zoom-in-98 duration-100 group-data-[state=checked]:block">
 						{children}
 					</div>
 				)}

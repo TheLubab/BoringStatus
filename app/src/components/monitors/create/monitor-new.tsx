@@ -227,7 +227,7 @@ export function MonitorNew({
 						{(step === 1 || step === 2) && (
 							<Button
 								type="button"
-								variant="secondary"
+								variant="default"
 								onClick={(e) => {
 									e.preventDefault();
 									nextStep();
