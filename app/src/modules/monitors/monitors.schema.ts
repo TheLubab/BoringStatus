@@ -51,8 +51,8 @@ export const monitor = pgTable(
 
 		// State (cache)
 		status: text("status").notNull().$type<MonitorStatus>(),
-		lastCheckAt: timestamp("last_check_at").notNull(),
-		nextCheckAt: timestamp("next_check_at").notNull(),
+		lastCheckAt: timestamp("last_check_at"),
+		nextCheckAt: timestamp("next_check_at"),
 
 		createdAt: timestamp("created_at").defaultNow(),
 		updatedAt: timestamp("updated_at").defaultNow(),

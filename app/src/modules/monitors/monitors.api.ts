@@ -1,12 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import { db } from "@/db";
 import { getSession } from "@/modules/auth/auth.api";
 
 import { monitor, monitorsToChannels } from "./monitors.schema";
-import { insertMonitorSchema } from "./monitors.zod";
+import { insertMonitorSchema, type DashboardMonitor } from "./monitors.zod";
 import { notificationChannel } from "../integrations/integrations.schema";
 
 // Helper to ensure auth and org
@@ -39,6 +39,7 @@ export const createMonitor = createServerFn({ method: "POST" })
 				.insert(monitor)
 				.values({
 					...monitorData,
+					status: "pending",
 					organizationId: activeOrgId,
 				})
 				.returning({ id: monitor.id });
@@ -90,6 +91,79 @@ export const getMonitorsByOrg = createServerFn({ method: "GET" }).handler(
 		return results;
 	},
 );
+
+export const getMonitorsByOrgForDashboard = createServerFn({
+	method: "GET",
+}).handler(async (): Promise<DashboardMonitor[]> => {
+	const activeOrgId = await requireAuth();
+
+	// 1. Get monitors
+	const monitors = await db.query.monitor.findMany({
+		where: eq(monitor.organizationId, activeOrgId),
+		orderBy: [desc(monitor.createdAt)],
+	});
+
+	if (monitors.length === 0) return [];
+
+	const monitorIds = monitors.map((m) => m.id);
+
+	// 2. Aggregate uptime from continuous aggregate 
+	const uptimeStats = await db.execute<{ monitor_id: string; uptime: number }>(sql`
+        SELECT 
+            monitor_id,
+            COALESCE(SUM(up_count)::float / NULLIF(SUM(total_checks), 0) * 100, 100) AS uptime
+        FROM monitor_stats_hourly
+        WHERE monitor_id IN (${sql.join(monitorIds, sql`, `)})
+          AND bucket > NOW() - INTERVAL '24 hours'
+        GROUP BY monitor_id
+    `);
+
+	// 3. Get recent latencies 
+	const latencyStats = await db.execute<{ monitor_id: string; latency_history: number[] }>(sql`
+        SELECT 
+            monitor_id,
+            COALESCE(ARRAY_AGG(latency ORDER BY time DESC), ARRAY[]::int[]) AS latency_history
+        FROM (
+            SELECT monitor_id, latency, time
+            FROM heartbeat
+            WHERE monitor_id IN (${sql.join(monitorIds, sql`, `)})
+              AND time > NOW() - INTERVAL '4 hours'
+            ORDER BY time DESC
+            LIMIT 50
+        ) recent
+        GROUP BY monitor_id
+    `);
+
+	// 4. Build lookup maps
+	const uptimeMap = new Map(uptimeStats.rows.map((s) => [s.monitor_id, s.uptime]));
+	const latencyMap = new Map(latencyStats.rows.map((s) => [s.monitor_id, s.latency_history]));
+
+	// 5. Get recent issues (down/error heartbeats)
+	const issueHeartbeats = await db.execute<{ monitor_id: string; message: string | null; status: string }>(sql`
+        SELECT DISTINCT ON (monitor_id) 
+            monitor_id, message, status
+        FROM heartbeat
+        WHERE monitor_id IN (${sql.join(monitorIds, sql`, `)})
+          AND status IN ('down', 'error')
+          AND time > NOW() - INTERVAL '24 hours'
+        ORDER BY monitor_id, time DESC
+    `);
+
+	const issuesMap = new Map(
+		issueHeartbeats.rows.map((h) => [
+			h.monitor_id,
+			[{ message: h.message ?? `Status: ${h.status}` }],
+		]),
+	);
+
+	// 6. Map to DashboardMonitor
+	return monitors.map((m) => ({
+		...m,
+		uptime: uptimeMap.get(m.id) ?? 100,
+		latencyHistory: latencyMap.get(m.id)?.slice(0, 50) ?? [],
+		issues: issuesMap.get(m.id) ?? [],
+	}));
+});
 
 // GET SINGLE MONITOR
 export const getMonitorById = createServerFn({ method: "GET" })

@@ -157,8 +157,6 @@ export type InsertMonitor = z.infer<typeof insertMonitorSchema>;
 export type Monitor = InferSelectModel<typeof monitor>;
 
 export interface MonitorIssue {
-	id: string;
-	severity: "high" | "medium" | "low";
 	message: string;
 }
 
