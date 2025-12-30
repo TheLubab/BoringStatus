@@ -1,4 +1,10 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap');
+@font-face {
+	font-family: 'Fixel';
+	src: url('/FixelVariable.ttf') format('truetype');
+	font-weight: 100 900;
+	font-display: swap;
+	font-style: normal;
+}
 
 @import 'tailwindcss';
 @import 'tw-animate-css';
@@ -93,9 +99,9 @@
 	--radius-lg: calc(var(--radius) + 2px);
 	--radius-xl: calc(var(--radius) + 4px);
 
-	--font-heading: "DM Sans", system-ui, sans-serif;
-	--font-body: "DM Sans", system-ui, sans-serif;
-	--font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+	--font-heading: "Fixel", system-ui, sans-serif;
+	--font-body: "Fixel", system-ui, sans-serif;
+	--font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
 	--color-premium: oklch(0.64 0.22 15);
 
