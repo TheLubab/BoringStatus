@@ -18,18 +18,76 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import type { InsertMonitor } from "@/modules/monitors/monitors.zod";
+import type {
+	InsertMonitor,
+	MonitorType,
+} from "@/modules/monitors/monitors.zod";
+import { useEffect } from "react";
+
+// - HTTP: dns, connect, ttfb, total, statusCode, tls, contentLength, includesKeyword, excludesKeyword
+// - Ping: latency, jitter, packetLoss
+// - TCP: connect, success
 
 const METRICS = [
-	{ value: "status", label: "Status", httpOnly: false, proOnly: false },
+	// Common
 	{
-		value: "response_time",
-		label: "Response Time",
-		httpOnly: false,
+		value: "status",
+		label: "Status",
+		types: ["http", "ping", "tcp"] as MonitorType[],
 		proOnly: false,
 	},
-	{ value: "body", label: "Response Body", httpOnly: true, proOnly: true },
-	{ value: "ssl_days", label: "SSL Expiry", httpOnly: true, proOnly: true },
+
+	// HTTP metrics
+	{
+		value: "body",
+		label: "Response Body",
+		types: ["http"] as MonitorType[],
+		proOnly: true,
+	},
+	{
+		value: "response_time",
+		label: "Response Time (ms)",
+		types: ["http"] as MonitorType[],
+		proOnly: false,
+	},
+	{
+		value: "dns",
+		label: "DNS Lookup Time (ms)",
+		types: ["http"] as MonitorType[],
+		proOnly: true,
+	},
+	{
+		value: "ttfb",
+		label: "Time to First Byte (ms)",
+		types: ["http"] as MonitorType[],
+		proOnly: true,
+	},
+	{
+		value: "connect",
+		label: "Connection Time (ms)",
+		types: ["http", "tcp"] as MonitorType[],
+		proOnly: true,
+	},
+	{
+		value: "tls",
+		label: "TLS Handshake Time (ms)",
+		types: ["http"] as MonitorType[],
+		proOnly: true,
+	},
+
+	// Ping metrics
+	{
+		value: "latency",
+		label: "Latency (ms)",
+		types: ["ping"] as MonitorType[],
+		proOnly: false,
+	},
+	{
+		value: "packet_loss",
+		label: "Packet Loss %",
+		types: ["ping"] as MonitorType[],
+		proOnly: true,
+	},
 ] as const;
 
 const OPERATORS = [
@@ -48,15 +106,13 @@ const STATUS_VALUES = [
 
 interface MonitorAlertRulesProps {
 	maxRules?: number;
-	allowBodyRules?: boolean;
-	allowSslRules?: boolean;
+	allowAdvancedMetrics?: boolean;
 	description?: string;
 }
 
 export function MonitorAlertRules({
 	maxRules = 10,
-	allowBodyRules = false,
-	allowSslRules = false,
+	allowAdvancedMetrics = true,
 	description = "Define conditions that will trigger an alert",
 }: MonitorAlertRulesProps) {
 	const form = useFormContext<InsertMonitor>();
@@ -67,63 +123,68 @@ export function MonitorAlertRules({
 		name: "alertRules",
 	});
 
+	useEffect(() => {
+		form.setValue("config.includesKeyword", undefined);
+		form.setValue("config.excludesKeyword", undefined);
+		fields.forEach((v) => {
+			if (v.metric === "body") {
+				if (v.operator === "contains") {
+					form.setValue("config.includesKeyword", v.value);
+				} else if (v.operator === "not_contains") {
+					form.setValue("config.excludesKeyword", v.value);
+				}
+			}
+		});
+	}, [fields, form.setValue]);
+
 	const canAddMore = maxRules === undefined || fields.length < maxRules;
-	const rulesRemaining =
-		maxRules !== undefined ? maxRules - fields.length : undefined;
 
 	const getValidOperators = (metric: string) => {
+		// Status only supports equals/not equals
 		if (metric === "status") {
 			return OPERATORS.filter((op) => ["eq", "neq"].includes(op.value));
 		}
-		if (metric === "response_time" || metric === "ssl_days") {
-			return OPERATORS.filter((op) => ["gt", "lt"].includes(op.value));
-		}
+		// Body uses contains/not_contains
 		if (metric === "body") {
 			return OPERATORS.filter((op) =>
 				["contains", "not_contains"].includes(op.value),
 			);
 		}
-		return OPERATORS;
+		// All timing metrics and packet_loss use gt/lt for threshold comparison
+		return OPERATORS.filter((op) => ["gt", "lt"].includes(op.value));
 	};
 
 	const getDefaultValue = (metric: string) => {
 		if (metric === "status") return "up";
-		if (metric === "response_time") return "1000";
-		if (metric === "ssl_days") return "30";
+		if (metric === "response_time") return "1000"; // 1 second
+		if (metric === "dns") return "100"; // 100ms
+		if (metric === "ttfb") return "500"; // 500ms
+		if (metric === "connect") return "200"; // 200ms
+		if (metric === "tls") return "200"; // 200ms
+		if (metric === "latency") return "100"; // 100ms
+		if (metric === "packet_loss") return "10"; // 10%
 		if (metric === "body") return "";
-		return "";
+		return "100";
 	};
 
 	const getDefaultOperator = (metric: string) => {
 		if (metric === "status") return "neq";
-		if (metric === "response_time") return "gt";
-		if (metric === "ssl_days") return "lt";
 		if (metric === "body") return "contains";
-		return "eq";
+		return "gt";
 	};
 
 	const getAvailableMetrics = () => {
-		let metrics = METRICS.map((m) => ({
+		// Filter metrics by current monitor type
+		const typeMetrics = METRICS.filter((m) =>
+			m.types.includes(type as MonitorType),
+		);
+
+		// Mark Pro features as disabled if not allowed
+		return typeMetrics.map((m) => ({
 			...m,
-			disabled: false,
-			showPro: false,
+			disabled: m.proOnly && !allowAdvancedMetrics,
+			showPro: m.proOnly && !allowAdvancedMetrics,
 		}));
-
-		// Filter by monitor type (completely hide non-http metrics for non-http monitors)
-		if (type !== "http") {
-			metrics = metrics.filter((m) => !m.httpOnly);
-		}
-
-		// Mark Pro features as disabled with label
-		return metrics.map((m) => {
-			if (m.value === "body" && !allowBodyRules) {
-				return { ...m, disabled: true, showPro: true };
-			}
-			if (m.value === "ssl_days" && !allowSslRules) {
-				return { ...m, disabled: true, showPro: true };
-			}
-			return m;
-		});
 	};
 
 	const handleAddRule = () => {
@@ -137,7 +198,7 @@ export function MonitorAlertRules({
 	};
 
 	return (
-		<div className="space-y-2 animate-in fade-in duration-300">
+		<div className="space-y-2 animate-in fade-in slide-in-from-left-2 duration-500">
 			<div className="flex items-center justify-between">
 				<FormLabel>Alert Rules</FormLabel>
 				<Button
@@ -166,7 +227,7 @@ export function MonitorAlertRules({
 			/>
 
 			{fields.length === 0 ? (
-				<div className="py-4 text-center text-sm text-muted-foreground">
+				<div className="py-4 text-center text-sm text-muted-foreground animate-in fade-in">
 					No alert rules configured
 				</div>
 			) : (
@@ -203,7 +264,10 @@ export function MonitorAlertRules({
 												}}
 											>
 												<FormControl>
-													<SelectTrigger size="sm">
+													<SelectTrigger
+														size="sm"
+														className="max-w-full w-full min-w-full"
+													>
 														<SelectValue />
 													</SelectTrigger>
 												</FormControl>
@@ -241,7 +305,7 @@ export function MonitorAlertRules({
 												onValueChange={field.onChange}
 											>
 												<FormControl>
-													<SelectTrigger size="sm">
+													<SelectTrigger size="sm" className="w-full">
 														<SelectValue />
 													</SelectTrigger>
 												</FormControl>
@@ -270,7 +334,7 @@ export function MonitorAlertRules({
 														value={field.value}
 														onValueChange={field.onChange}
 													>
-														<SelectTrigger size="sm">
+														<SelectTrigger size="sm" className="w-full">
 															<SelectValue />
 														</SelectTrigger>
 														<SelectContent>
@@ -284,26 +348,27 @@ export function MonitorAlertRules({
 												) : currentMetric === "body" ? (
 													<Input
 														{...field}
-														placeholder="keyword"
-														maxLength={100}
+														type="text"
+														placeholder="keyword to search..."
 														className="h-8 text-sm"
 													/>
-												) : currentMetric === "response_time" ? (
+												) : currentMetric === "packet_loss" ? (
+													<Input
+														{...field}
+														type="number"
+														min={0}
+														max={100}
+														placeholder="%"
+														className="h-8 font-mono text-sm"
+													/>
+												) : (
+													// All timing metrics (response_time, dns, ttfb, connect, tls, latency)
 													<Input
 														{...field}
 														type="number"
 														min={1}
 														max={60000}
 														placeholder="ms"
-														className="h-8 font-mono text-sm"
-													/>
-												) : (
-													<Input
-														{...field}
-														type="number"
-														min={1}
-														max={365}
-														placeholder="days"
 														className="h-8 font-mono text-sm"
 													/>
 												)}

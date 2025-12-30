@@ -1,5 +1,5 @@
-import { createInsertSchema } from "drizzle-zod";
 import type { InferSelectModel } from "drizzle-orm";
+import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 import { monitor } from "./monitors.schema";
@@ -21,12 +21,33 @@ export const monitorTypeSchema = z.enum([
 
 export const monitorAlertRuleSchema = z.object({
 	metric: z.string(),
-	operator: z.enum(["gt", "lt", "eq", "neq", "contains"]),
-	value: z.coerce.string(),
+	operator: z.enum(["gt", "lt", "eq", "neq", "contains", "not_contains"]),
+	value: z.coerce.string<any>(),
 });
 
+export const monitorAlertRulesSchema = z
+	.array(monitorAlertRuleSchema)
+	.max(256)
+	.transform((rules) => {
+		const seen = new Set<string>();
+		const rules_ = rules
+			.filter((rule) => {
+				// dedup
+				const key = JSON.stringify(rule);
+				if (seen.has(key)) return false;
+				seen.add(key);
+				return true;
+			})
+			.filter((rule) => {
+				// remove body rules (we make them part of config.in/excludesKeyword)
+				return rule.metric !== "body";
+			});
+
+		return rules_;
+	});
+
 export type MonitorType = z.infer<typeof monitorTypeSchema>;
-export type MonitorAlertRule = z.infer<typeof monitorAlertRuleSchema>;
+export type MonitorAlertRules = z.infer<typeof monitorAlertRulesSchema>;
 
 export type MonitorStatus = HeartbeatStatus | "pending";
 
@@ -68,6 +89,7 @@ export type MonitorConfig = HttpConfig | TcpConfig | PingConfig;
 const baseMonitorSchema = createInsertSchema(monitor, {
 	frequency: z.number().min(60).max(86400),
 	timeout: z.number().min(1).max(60),
+	alertRules: monitorAlertRulesSchema,
 }).omit({
 	id: true,
 	status: true,

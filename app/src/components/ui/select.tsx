@@ -35,7 +35,7 @@ function SelectTrigger({
 			data-slot="select-trigger"
 			data-size={size}
 			className={cn(
-				"border-input data-[placeholder]:text-muted-foreground/60 [&_svg:not([class*='text-'])]:text-muted-foreground focus-visible:border-primary focus-visible:ring-1 focus-visible:ring-primary/30 aria-invalid:ring-1 aria-invalid:ring-destructive/30 aria-invalid:border-destructive flex w-fit items-center justify-between gap-1.5 rounded-md border bg-transparent px-2.5 text-[13px] whitespace-nowrap transition-all duration-100 ease-out outline-none hover:border-foreground/20 active:scale-[0.98] active:transition-none disabled:cursor-not-allowed disabled:opacity-40 data-[size=default]:h-8 data-[size=sm]:h-7 *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-1.5 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-3.5",
+				"border-input data-placeholder:text-muted-foreground/60 [&_svg:not([class*='text-'])]:text-muted-foreground focus-visible:border-primary focus-visible:ring-1 focus-visible:ring-primary/30 aria-invalid:ring-1 aria-invalid:ring-destructive/30 aria-invalid:border-destructive flex w-full max-w-full items-center justify-between gap-1.5 rounded-md border bg-transparent px-2.5 text-[13px] whitespace-nowrap transition-all duration-100 ease-out outline-none hover:border-foreground/20 active:scale-[0.98] active:transition-none disabled:cursor-not-allowed disabled:opacity-40 data-[size=default]:h-8 data-[size=sm]:h-7 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-1.5 *:data-[slot=select-value]:overflow-hidden *:data-[slot=select-value]:text-ellipsis [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-3.5",
 				className,
 			)}
 			{...props}
@@ -62,7 +62,7 @@ function SelectContent({
 				className={cn(
 					"bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-98 data-[state=open]:zoom-in-98 data-[side=bottom]:slide-in-from-top-1 data-[side=left]:slide-in-from-right-1 data-[side=right]:slide-in-from-left-1 data-[side=top]:slide-in-from-bottom-1 relative z-50 max-h-(--radix-select-content-available-height) min-w-[7rem] origin-(--radix-select-content-transform-origin) overflow-x-hidden overflow-y-auto rounded-md border border-border/80 shadow-sm",
 					position === "popper" &&
-						"data-[side=bottom]:translate-y-0.5 data-[side=left]:-translate-x-0.5 data-[side=right]:translate-x-0.5 data-[side=top]:-translate-y-0.5",
+					"data-[side=bottom]:translate-y-0.5 data-[side=left]:-translate-x-0.5 data-[side=right]:translate-x-0.5 data-[side=top]:-translate-y-0.5",
 					className,
 				)}
 				position={position}
@@ -74,7 +74,7 @@ function SelectContent({
 					className={cn(
 						"p-0.5",
 						position === "popper" &&
-							"h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)] scroll-my-0.5",
+						"h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)] scroll-my-0.5",
 					)}
 				>
 					{children}

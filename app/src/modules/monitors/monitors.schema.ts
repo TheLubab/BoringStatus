@@ -16,7 +16,7 @@ import { heartbeat } from "@/modules/heartbeats/heartbeats.schema";
 import { notificationChannel } from "@/modules/integrations/integrations.schema";
 
 import type {
-	MonitorAlertRule,
+	MonitorAlertRules,
 	MonitorConfig,
 	MonitorStatus,
 	MonitorType,
@@ -47,7 +47,7 @@ export const monitor = pgTable(
 		config: jsonb("config").notNull().$type<MonitorConfig>(),
 
 		// flexible rules: "Alert if latency > 2000ms" OR "Alert if CPU > 90%"
-		alertRules: jsonb("alert_rules").notNull().$type<MonitorAlertRule[]>(),
+		alertRules: jsonb("alert_rules").notNull().$type<MonitorAlertRules>(),
 
 		// State (cache)
 		status: text("status").notNull().$type<MonitorStatus>(),

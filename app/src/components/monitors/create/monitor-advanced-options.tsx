@@ -217,46 +217,6 @@ export function MonitorAdvancedOptions({
 						)}
 					/>
 
-					{/* Keywords */}
-					<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-						<FormField
-							control={form.control}
-							name="config.includesKeyword"
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>Must Include</FormLabel>
-									<FormControl>
-										<Input
-											{...field}
-											value={field.value ?? ""}
-											placeholder="e.g. OK, success"
-										/>
-									</FormControl>
-									<FormDescription>Alert if missing</FormDescription>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
-
-						<FormField
-							control={form.control}
-							name="config.excludesKeyword"
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>Must Exclude</FormLabel>
-									<FormControl>
-										<Input
-											{...field}
-											value={field.value ?? ""}
-											placeholder="e.g. error, failed"
-										/>
-									</FormControl>
-									<FormDescription>Alert if found</FormDescription>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
-					</div>
 
 					{/* Custom Headers */}
 					<div className="space-y-3">

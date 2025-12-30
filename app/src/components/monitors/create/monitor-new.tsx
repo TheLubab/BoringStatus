@@ -1,5 +1,4 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft, ArrowRight } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -13,14 +12,12 @@ import {
 } from "@/modules/monitors/monitors.zod";
 
 import { MonitorStepAlerting } from "./monitor-step-alerting";
-import { MonitorStepGeneral } from "./monitor-step-general";
 import { MonitorSuccess } from "./monitor-success";
 import { MonitorSelectType } from "./monitor-select-type";
 import { MonitorTargetInput } from "./monitor-target-input";
 import { Separator } from "@/components/ui/separator";
 import { MonitorSelectFrequency } from "./monitor-select-frequency";
 import { MonitorAdvancedOptions } from "./monitor-advanced-options";
-import { MonitorHttpValidation } from "./monitor-http-validation";
 import { MonitorAlertRules } from "./monitor-alert-rules";
 
 interface MonitorNewProps {
@@ -72,8 +69,8 @@ export function MonitorNew({
 			alertRules: [
 				{
 					metric: "status",
-					operator: "neq",
-					value: "up",
+					operator: "eq",
+					value: "down",
 				},
 			],
 			channelIds: [],
@@ -81,17 +78,25 @@ export function MonitorNew({
 	});
 
 	const nextStep = async () => {
-		const result = await form.trigger([
-			"type",
-			"name",
-			"target",
-			"frequency",
-			"timeout",
-			"config",
-		]);
+		let fieldsToValidate: (keyof InsertMonitor)[] = [];
+
+		if (step === 1) {
+			fieldsToValidate = [
+				"type",
+				"name",
+				"target",
+				"frequency",
+				"timeout",
+				"config",
+			];
+		} else if (step === 2) {
+			fieldsToValidate = ["alertRules"];
+		}
+
+		const result = await form.trigger(fieldsToValidate);
 
 		if (result) {
-			setStep(2);
+			setStep((prev) => prev + 1);
 		} else {
 			const errors = form.formState.errors;
 			const errorFields = Object.keys(errors);
@@ -189,8 +194,10 @@ export function MonitorNew({
 					})}
 					className={cn("space-y-8", className)}
 				>
-					<main className="px-6 space-y-6 pt-6">
-						<h2 className="text-xl font-normal">New monitor</h2>
+					<main className="px-6 space-y-6 pt-6 min-h-64">
+						{step === 1 && (
+							<h2 className="text-xl font-semibold">New monitor</h2>
+						)}
 						{step === 1 && <MonitorSelectType />}
 						{step === 1 && <MonitorTargetInput />}
 						{step === 1 && <MonitorSelectFrequency />}
