@@ -30,9 +30,6 @@ export function MonitorSelectFrequency({
 		{
 			value: "300",
 			title: "5 min",
-			disabled: !allowHighFrequency,
-			radioCircle: !allowHighFrequency && <ProBadge />,
-			showRadio: allowHighFrequency,
 		},
 		{
 			value: "600",
