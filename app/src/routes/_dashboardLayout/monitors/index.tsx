@@ -2,9 +2,9 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
 
-import { MonitorsTable } from "@/components/monitors/table/monitor-table";
+import { MonitorList } from "@/components/monitors/list/monitor-list";
 import { Button } from "@/components/ui/button";
-import { getMonitorsByOrg } from "@/modules/monitors/monitors.api";
+import { getMonitorsByOrgForDashboard } from "@/modules/monitors/monitors.api";
 
 export const Route = createFileRoute("/_dashboardLayout/monitors/")({
 	component: MonitorsPage,
@@ -13,31 +13,24 @@ export const Route = createFileRoute("/_dashboardLayout/monitors/")({
 function MonitorsPage() {
 	const { data } = useSuspenseQuery({
 		queryKey: ["monitors"],
-		queryFn: () => getMonitorsByOrg(),
+		queryFn: () => getMonitorsByOrgForDashboard(),
 	});
 
 	const router = useRouter();
 
 	return (
-		<div className="p-2">
+		<div className="m-auto py-8 px-4 w-full max-w-5xl">
 			<div className="flex flex-col mb-7 sm:flex-row items-start sm:items-center justify-between gap-6">
-				<div>
-					<h1 className="text-3xl font-black tracking-tight">Monitors</h1>
-					<p className="text-muted-foreground mt-2 text-lg">
-						Real-time performance tracking.
-					</p>
-				</div>
-				<div className="flex items-center gap-3 w-full sm:w-auto">
-					<Button asChild>
-						<Link to="/monitors/add">
-							<Plus />
-							Add Monitor
-						</Link>
-					</Button>
-				</div>
+				<h1 className="text-3xl font-black tracking-tight">Monitors</h1>
+				<Button asChild>
+					<Link to="/monitors/new">
+						<Plus />
+						New Monitor
+					</Link>
+				</Button>
 			</div>
 
-			<MonitorsTable
+			<MonitorList
 				data={data}
 				onRowClick={(monitor) =>
 					router.navigate({
