@@ -42,21 +42,21 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import type { NotificationChannel } from "@/db/schema";
 import { cn } from "@/lib/utils";
 import { createChannel } from "@/modules/integrations/integrations.api";
+import type { NotificationChannel } from "@/modules/integrations/integrations.schema";
 import {
 	type InsertNotificationChannel,
+	type NotificationChannelType,
 	insertNotificationChannelSchema,
 } from "@/modules/integrations/integrations.zod";
 
 interface ChannelAddDialogProps {
-	onSuccess?: (channel: NotificationChannel & { id: string }) => void;
+	onSuccess?: (channel: NotificationChannel) => void;
 	children?: React.ReactNode;
 	allowPro?: boolean;
 }
 
-type ChannelType = "email" | "slack" | "discord" | "webhook";
 type Step = "type" | "details" | "verify" | "success";
 
 const WEBHOOK_EXAMPLE = `POST /your-webhook-endpoint
@@ -103,16 +103,16 @@ export function ChannelAddDialog({
 		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogTrigger asChild>
 				{children || (
-					<Button variant="outline" size="sm" className="gap-2" type="button">
-						<Plus className="w-4 h-4" />
-						Add Channel
+					<Button variant="outline" size="sm" className="gap-1.5" type="button">
+						<Plus className="size-3.5" />
+						<span className="text-[13px]">Add Channel</span>
 					</Button>
 				)}
 			</DialogTrigger>
 			<DialogPortal>
 				<DialogContent className="sm:max-w-130">
 					<ChannelAddForm
-						onChannelCreate={(c) => createMutation.mutate({ data: c })}
+						onChannelCreate={(data) => createMutation.mutate(data)}
 						allowPro={allowPro}
 						onClose={handleClose}
 					/>
@@ -123,7 +123,7 @@ export function ChannelAddDialog({
 }
 
 interface ChannelAddFormProps {
-	onChannelCreate: (channel: NotificationChannel) => void;
+	onChannelCreate: (data: InsertNotificationChannel) => void;
 	allowPro?: boolean;
 	onClose: () => void;
 }
@@ -134,7 +134,8 @@ export function ChannelAddForm({
 	onClose,
 }: ChannelAddFormProps) {
 	const [step, setStep] = useState<Step>("type");
-	const [selectedType, setSelectedType] = useState<ChannelType>("email");
+	const [selectedType, setSelectedType] =
+		useState<NotificationChannelType>("email");
 	const [verifying, setVerifying] = useState(false);
 	const [verificationCode, setVerificationCode] = useState("");
 	const [pendingEmail, setPendingEmail] = useState("");
@@ -147,43 +148,28 @@ export function ChannelAddForm({
 			name: "",
 			type: "email",
 			email: "",
-			config: {},
-		} as any, // Cast to any because defaultValues is hard with discriminated unions
+		},
 	});
 
-	const handleTypeSelect = (type: ChannelType) => {
+	const handleTypeSelect = (type: NotificationChannelType) => {
 		setSelectedType(type);
 
-		const commonDefaults = {
-			name: form.getValues("name"),
-			type,
-			config: {},
-		};
+		const currentName = form.getValues("name");
 
-		if (type === "email") {
-			form.reset({
-				...commonDefaults,
-				type: "email",
-				email: "",
-			} as any);
-		} else if (type === "slack") {
-			form.reset({
-				...commonDefaults,
-				type: "slack",
-				webhookUrl: "",
-			} as any);
-		} else if (type === "discord") {
-			form.reset({
-				...commonDefaults,
-				type: "discord",
-				webhookUrl: "",
-			} as any);
-		} else if (type === "webhook") {
-			form.reset({
-				...commonDefaults,
-				type: "webhook",
-				webhookUrl: "",
-			} as any);
+		// Reset form with type-specific defaults
+		switch (type) {
+			case "email":
+				form.reset({ name: currentName, type: "email", email: "" });
+				break;
+			case "slack":
+				form.reset({ name: currentName, type: "slack", webhookUrl: "" });
+				break;
+			case "discord":
+				form.reset({ name: currentName, type: "discord", webhookUrl: "" });
+				break;
+			case "webhook":
+				form.reset({ name: currentName, type: "webhook", webhookUrl: "" });
+				break;
 		}
 
 		setStep("details");
@@ -193,7 +179,6 @@ export function ChannelAddForm({
 		const values = form.getValues();
 		if (values.type !== "email") return;
 
-		// @ts-expect-error
 		const email = values.email;
 
 		if (!email) {
@@ -227,25 +212,7 @@ export function ChannelAddForm({
 		toast.success("Email verified!", { id: "verify-code" });
 
 		const values = form.getValues();
-
-		// Construct the config object expected by the DB/API
-		let config = {};
-		if (values.type === "email") {
-			// @ts-expect-error
-			config = { email: values.email };
-		} else if (["slack", "discord", "webhook"].includes(values.type)) {
-			// @ts-expect-error
-			config = { webhookUrl: values.webhookUrl };
-		}
-
-		const newChannel = {
-			...values,
-			config,
-			id: crypto.randomUUID(),
-		};
-		// @ts-expect-error
-		onChannelCreate(newChannel);
-
+		onChannelCreate(values);
 		setStep("success");
 	};
 
@@ -263,17 +230,7 @@ export function ChannelAddForm({
 		setVerifying(false);
 		toast.success("Channel added successfully!", { id: "save-channel" });
 
-		// Construct config for DB
-		let config = {};
-		if (["slack", "discord", "webhook"].includes(data.type)) {
-			// @ts-expect-error
-			config = { webhookUrl: data.webhookUrl };
-		}
-
-		// @ts-expect-error - DB type vs Form type mismatch for ID
-		const newChannel = { ...data, config, id: crypto.randomUUID() };
-		// @ts-expect-error
-		onChannelCreate(newChannel);
+		onChannelCreate(data);
 		setStep("success");
 	};
 
@@ -282,7 +239,7 @@ export function ChannelAddForm({
 		setVerificationCode("");
 		setPendingEmail("");
 		setExampleOpen(false);
-		form.reset();
+		form.reset({ name: "", type: "email", email: "" });
 	};
 
 	const handleResetAndClose = () => {
@@ -306,21 +263,21 @@ export function ChannelAddForm({
 		<>
 			{/* SUCCESS STATE */}
 			{step === "success" && (
-				<div className="py-8 text-center space-y-6">
-					<div className="mx-auto w-16 h-16 rounded-full bg-emerald-500/10 flex items-center justify-center">
-						<CheckCircle2 className="w-8 h-8 text-emerald-500" />
+				<div className="py-6 text-center space-y-4">
+					<div className="mx-auto size-12 rounded-full bg-emerald-500/10 flex items-center justify-center">
+						<CheckCircle2 className="size-6 text-emerald-500" />
 					</div>
-					<div className="space-y-2">
-						<DialogTitle className="text-xl">Channel Added</DialogTitle>
-						<DialogDescription>
+					<div className="space-y-1">
+						<DialogTitle className="text-base">Channel Added</DialogTitle>
+						<DialogDescription className="text-[13px]">
 							Your {selectedType} channel is ready to receive alerts
 						</DialogDescription>
 					</div>
-					<div className="flex gap-3 justify-center">
-						<Button variant="outline" onClick={reset} type="button">
+					<div className="flex gap-2 justify-center">
+						<Button variant="outline" onClick={reset} type="button" size="sm">
 							Add Another
 						</Button>
-						<Button onClick={handleResetAndClose} type="button">
+						<Button onClick={handleResetAndClose} type="button" size="sm">
 							Done
 						</Button>
 					</div>
@@ -336,24 +293,24 @@ export function ChannelAddForm({
 							Choose how you want to receive alerts
 						</DialogDescription>
 					</DialogHeader>
-					<div className="grid grid-cols-2 gap-3 py-4">
+					<div className="grid grid-cols-2 gap-2 py-3">
 						<TypeCard
-							icon={<Mail className="w-6 h-6" />}
+							icon={<Mail className="size-5" />}
 							label="Email"
 							onClick={() => handleTypeSelect("email")}
 						/>
 						<TypeCard
-							icon={<MessageSquare className="w-6 h-6" />}
+							icon={<MessageSquare className="size-5" />}
 							label="Slack"
 							onClick={() => handleTypeSelect("slack")}
 						/>
 						<TypeCard
-							icon={<MessageSquare className="w-6 h-6" />}
+							icon={<MessageSquare className="size-5" />}
 							label="Discord"
 							onClick={() => handleTypeSelect("discord")}
 						/>
 						<TypeCard
-							icon={<Webhook className="w-6 h-6" />}
+							icon={<Webhook className="size-5" />}
 							label="Webhook"
 							isPro
 							disabled={!allowPro}
@@ -371,7 +328,7 @@ export function ChannelAddForm({
 							e.stopPropagation();
 							form.handleSubmit(onSubmit, console.error)(e);
 						}}
-						className="space-y-6"
+						className="space-y-4"
 					>
 						<DialogHeader>
 							<Button
@@ -379,18 +336,18 @@ export function ChannelAddForm({
 								variant="ghost"
 								size="sm"
 								onClick={() => setStep("type")}
-								className="w-fit -ml-3 mb-2"
+								className="w-fit -ml-2 mb-1 h-7 text-[13px]"
 							>
-								<ArrowLeft className="w-4 h-4 mr-2" />
+								<ArrowLeft className="size-3 mr-1.5" />
 								Back
 							</Button>
-							<DialogTitle>
+							<DialogTitle className="text-[15px]">
 								Configure{" "}
 								{selectedType.charAt(0).toUpperCase() + selectedType.slice(1)}
 							</DialogTitle>
 						</DialogHeader>
 
-						<div className="space-y-4">
+						<div className="space-y-3">
 							<FormField
 								control={form.control}
 								name="name"
@@ -431,38 +388,38 @@ export function ChannelAddForm({
 							{(selectedType === "slack" ||
 								selectedType === "discord" ||
 								selectedType === "webhook") && (
-								<FormField
-									control={form.control}
-									name="webhookUrl"
-									render={({ field }) => (
-										<FormItem>
-											<div className="flex items-center justify-between">
-												<FormLabel>Webhook URL</FormLabel>
-												{selectedType !== "webhook" && (
-													<a
-														href={getSetupDocsUrl(selectedType)}
-														target="_blank"
-														rel="noopener noreferrer"
-														className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
-													>
-														Setup guide
-														<ExternalLink className="w-3 h-3" />
-													</a>
-												)}
-											</div>
-											<FormControl>
-												<Input
-													type="url"
-													placeholder={getWebhookPlaceholder(selectedType)}
-													className="font-mono text-sm"
-													{...field}
-												/>
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
-							)}
+									<FormField
+										control={form.control}
+										name="webhookUrl"
+										render={({ field }) => (
+											<FormItem>
+												<div className="flex items-center justify-between">
+													<FormLabel>Webhook URL</FormLabel>
+													{selectedType !== "webhook" && (
+														<a
+															href={getSetupDocsUrl(selectedType)}
+															target="_blank"
+															rel="noopener noreferrer"
+															className="text-[11px] text-muted-foreground/70 hover:text-foreground inline-flex items-center gap-0.5 transition-colors duration-100"
+														>
+															Setup guide
+															<ExternalLink className="size-2.5" />
+														</a>
+													)}
+												</div>
+												<FormControl>
+													<Input
+														type="url"
+														placeholder={getWebhookPlaceholder(selectedType)}
+														className="font-mono text-[13px]"
+														{...field}
+													/>
+												</FormControl>
+												<FormMessage />
+											</FormItem>
+										)}
+									/>
+								)}
 
 							{selectedType === "webhook" && (
 								<Collapsible open={exampleOpen} onOpenChange={setExampleOpen}>
@@ -471,30 +428,30 @@ export function ChannelAddForm({
 											type="button"
 											variant="ghost"
 											size="sm"
-											className="w-full justify-between text-muted-foreground hover:text-foreground"
+											className="w-full justify-between text-muted-foreground/70 hover:text-foreground h-7"
 										>
-											<span className="flex items-center gap-2">
-												<Code className="w-4 h-4" />
+											<span className="flex items-center gap-1.5 text-[13px]">
+												<Code className="size-3" />
 												View webhook payload example
 											</span>
-											<span className="text-xs">
+											<span className="text-[11px]">
 												{exampleOpen ? "Hide" : "Show"}
 											</span>
 										</Button>
 									</CollapsibleTrigger>
-									<CollapsibleContent className="pt-2">
+									<CollapsibleContent className="pt-1.5">
 										<div className="relative">
-											<pre className="text-xs bg-muted p-4 rounded-lg overflow-x-auto border">
+											<pre className="text-[11px] bg-muted p-3 rounded-md overflow-x-auto border">
 												<code>{WEBHOOK_EXAMPLE}</code>
 											</pre>
 											<Button
 												type="button"
 												size="sm"
 												variant="ghost"
-												className="absolute top-2 right-2"
+												className="absolute top-1.5 right-1.5 size-6 p-0"
 												onClick={copyExample}
 											>
-												<Copy className="w-3 h-3" />
+												<Copy className="size-2.5" />
 											</Button>
 										</div>
 									</CollapsibleContent>
@@ -502,11 +459,11 @@ export function ChannelAddForm({
 							)}
 						</div>
 
-						<div className="flex justify-end gap-3 pt-4 border-t">
-							<Button type="submit" disabled={verifying}>
+						<div className="flex justify-end gap-2 pt-3 border-t">
+							<Button type="submit" disabled={verifying} size="sm">
 								{verifying ? (
 									<>
-										<Loader2 className="w-4 h-4 mr-2 animate-spin" />
+										<Loader2 className="size-3 mr-1.5 animate-spin" />
 										{selectedType === "email" ? "Sending..." : "Saving..."}
 									</>
 								) : (
@@ -520,37 +477,37 @@ export function ChannelAddForm({
 
 			{/* EMAIL VERIFICATION */}
 			{step === "verify" && (
-				<div className="space-y-6">
+				<div className="space-y-4">
 					<DialogHeader>
 						<Button
 							type="button"
 							variant="ghost"
 							size="sm"
 							onClick={() => setStep("details")}
-							className="w-fit -ml-3 mb-2"
+							className="w-fit -ml-2 mb-1 h-7 text-[13px]"
 						>
-							<ArrowLeft className="w-4 h-4 mr-2" />
+							<ArrowLeft className="size-3 mr-1.5" />
 							Back
 						</Button>
-						<DialogTitle>Verify Email</DialogTitle>
-						<DialogDescription>
+						<DialogTitle className="text-[15px]">Verify Email</DialogTitle>
+						<DialogDescription className="text-[13px]">
 							Enter the code sent to{" "}
 							<button
 								onClick={() => copyToClipboard(pendingEmail)}
-								className="font-medium text-foreground hover:underline inline-flex items-center gap-1"
+								className="font-medium text-foreground hover:underline inline-flex items-center gap-0.5"
 								type="button"
 							>
 								{pendingEmail}
 								{copied ? (
-									<Check className="w-3 h-3 text-emerald-500" />
+									<Check className="size-2.5 text-emerald-500" />
 								) : (
-									<Copy className="w-3 h-3" />
+									<Copy className="size-2.5" />
 								)}
 							</button>
 						</DialogDescription>
 					</DialogHeader>
 
-					<div className="space-y-4">
+					<div className="space-y-3">
 						<Input
 							type="text"
 							placeholder="000000"
@@ -560,11 +517,11 @@ export function ChannelAddForm({
 								const value = e.target.value.replace(/\D/g, "").slice(0, 6);
 								setVerificationCode(value);
 							}}
-							className="text-center text-2xl tracking-[0.5em] font-mono h-14"
+							className="text-center text-xl tracking-[0.4em] font-mono h-11"
 							autoFocus
 						/>
 
-						<p className="text-sm text-center text-muted-foreground">
+						<p className="text-[13px] text-center text-muted-foreground/70">
 							Didn't receive it?{" "}
 							<button
 								type="button"
@@ -576,15 +533,16 @@ export function ChannelAddForm({
 						</p>
 					</div>
 
-					<div className="flex justify-end gap-3 pt-4 border-t">
+					<div className="flex justify-end gap-2 pt-3 border-t">
 						<Button
 							type="button"
 							onClick={handleVerifyCode}
 							disabled={verifying || verificationCode.length !== 6}
+							size="sm"
 						>
 							{verifying ? (
 								<>
-									<Loader2 className="w-4 h-4 mr-2 animate-spin" />
+									<Loader2 className="size-3 mr-1.5 animate-spin" />
 									Verifying...
 								</>
 							) : (
@@ -617,24 +575,24 @@ function TypeCard({
 			disabled={disabled}
 			onClick={disabled ? undefined : onClick}
 			className={cn(
-				"relative flex flex-col items-center gap-3 p-6 border rounded-lg transition-all",
+				"relative flex flex-col items-center gap-2 p-4 border rounded-md transition-all duration-100",
 				disabled
-					? "opacity-50 cursor-not-allowed"
-					: "hover:border-primary hover:bg-accent",
+					? "opacity-40 cursor-not-allowed"
+					: "hover:border-primary/50 hover:bg-muted/30 active:scale-[0.98]",
 			)}
 		>
 			{isPro && (
-				<div className="absolute top-2 right-2">
+				<div className="absolute top-1.5 right-1.5">
 					<ProBadge />
 				</div>
 			)}
-			<div className="text-muted-foreground">{icon}</div>
-			<span className="font-medium">{label}</span>
+			<div className="text-muted-foreground/70">{icon}</div>
+			<span className="font-medium text-[13px]">{label}</span>
 		</button>
 	);
 }
 
-function getNamePlaceholder(type: ChannelType) {
+function getNamePlaceholder(type: NotificationChannelType) {
 	switch (type) {
 		case "email":
 			return "Production Alerts";
@@ -647,7 +605,7 @@ function getNamePlaceholder(type: ChannelType) {
 	}
 }
 
-function getWebhookPlaceholder(type: ChannelType) {
+function getWebhookPlaceholder(type: NotificationChannelType) {
 	switch (type) {
 		case "slack":
 			return "https://hooks.slack.com/services/...";
@@ -658,7 +616,7 @@ function getWebhookPlaceholder(type: ChannelType) {
 	}
 }
 
-function getSetupDocsUrl(type: ChannelType) {
+function getSetupDocsUrl(type: NotificationChannelType) {
 	switch (type) {
 		case "slack":
 			return "https://api.slack.com/messaging/webhooks";

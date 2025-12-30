@@ -14,7 +14,6 @@ interface ChannelListProps {
 	selectedIds?: string[];
 	onSelectionChange?: (ids: string[]) => void;
 	allowDelete?: boolean;
-	compact?: boolean;
 }
 
 export function ChannelList({
@@ -22,7 +21,6 @@ export function ChannelList({
 	selectedIds,
 	onSelectionChange,
 	allowDelete = false,
-	compact = false,
 }: ChannelListProps) {
 	const Comp = onSelectionChange ? "label" : "div";
 	const queryClient = useQueryClient();
@@ -40,29 +38,30 @@ export function ChannelList({
 
 	if (channels.length === 0) {
 		return (
-			<div className="flex flex-col items-center justify-center p-8 border-2 border-dashed rounded-xl bg-muted/10 text-muted-foreground">
-				<AlertCircle className="w-8 h-8 mb-2 opacity-50" />
-				<p className="text-sm font-medium">
+			<div className="flex flex-col items-center justify-center p-6 border border-dashed rounded-md bg-muted/5 text-muted-foreground">
+				<AlertCircle className="size-6 mb-1.5 opacity-40" />
+				<p className="text-[13px] font-medium">
 					No notification channels configured.
 				</p>
-				<p className="text-xs">Add one to get alerts.</p>
+				<p className="text-[11px] text-muted-foreground/70">
+					Add one to get alerts.
+				</p>
 			</div>
 		);
 	}
 
 	return (
-		<div className={cn("space-y-2", compact && "space-y-1")}>
+		<div className={"space-y-1"}>
 			{channels.map((channel) => {
 				const isSelected = selectedIds?.includes(channel.id) ?? false;
 				return (
 					<Comp
 						key={channel.id}
 						className={cn(
-							"flex items-center gap-3 cursor-pointer border rounded-xl transition-all group",
-							compact ? "p-3" : "p-4",
+							"p-2 flex items-center gap-2.5 cursor-pointer border rounded-md transition-all duration-100 group",
 							isSelected
-								? "border-primary/50 bg-primary/5 shadow-sm"
-								: "bg-card",
+								? "border-primary/40 bg-primary/5"
+								: "bg-card hover:border-foreground/15",
 						)}
 						onClick={(e) => {
 							e.stopPropagation();
@@ -72,7 +71,7 @@ export function ChannelList({
 							<input
 								checked={isSelected}
 								type="radio"
-								onChange={() => {}}
+								onChange={() => { }}
 								onClick={() => {
 									if (isSelected) {
 										onSelectionChange?.(
@@ -83,56 +82,44 @@ export function ChannelList({
 									}
 								}}
 								className={cn(
-									"shrink-0 cursor-pointer peer h-4 w-4 appearance-none rounded-full border transition-colors",
-									"border-border bg-background",
+									"shrink-0 cursor-pointer peer size-3.5 appearance-none rounded-full border transition-all duration-100",
+									"border-input bg-transparent",
 									"checked:border-primary checked:bg-primary",
-									"focus-visible:outline-none",
+									"focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/40",
 								)}
 							/>
 						)}
 
 						<div
 							className={cn(
-								"flex items-center justify-center rounded-lg shrink-0",
-								compact ? "w-9 h-9" : "w-11 h-11",
+								"size-7 flex items-center justify-center rounded-md shrink-0",
 								getTypeColor(channel.type),
 							)}
 						>
-							{getChannelIcon(channel.type, compact ? "w-4 h-4" : "w-5 h-5")}
+							{getChannelIcon(channel.type, "size-4")}
 						</div>
 
 						<div className="flex-1 min-w-0">
-							<div className="flex items-center gap-2">
+							<div className="flex items-center gap-1.5">
 								<p
 									className={cn(
-										"font-semibold truncate",
-										compact ? "text-sm" : "text-base",
+										"font-semibold truncate tracking-tight text-[13px]",
 									)}
 								>
 									{channel.name}
 								</p>
 								<Badge
 									variant="outline"
-									className={cn(
-										"uppercase shrink-0",
-										compact ? "text-[9px] h-4 px-1" : "text-[10px] h-5 px-1.5",
-									)}
+									className="uppercase shrink-0 text-[8px] h-3.5 px-1"
 								>
 									{channel.type}
 								</Badge>
 							</div>
-							<div className="flex items-center gap-2 mt-0.5">
-								<p
-									className={cn(
-										"text-muted-foreground truncate",
-										compact ? "text-xs" : "text-sm",
-									)}
-								>
-									{maskedTarget(
-										channel.config?.email || channel.config?.webhookUrl || "??",
-									)}
-								</p>
-							</div>
+							<p className={"text-[10px] text-muted-foreground/70 truncate"}>
+								{(channel.config as any)?.email ||
+									(channel.config as any)?.webhookUrl ||
+									"??"}
+							</p>
 						</div>
 
 						{allowDelete && (
@@ -140,7 +127,7 @@ export function ChannelList({
 								type="button"
 								variant="ghost"
 								size="icon"
-								className="shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+								className="shrink-0 size-7 text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-colors duration-100"
 								disabled={deleteMutation.isPending}
 								onClick={(e) => {
 									e.stopPropagation();
@@ -153,9 +140,9 @@ export function ChannelList({
 								}}
 							>
 								{deleteMutation.isPending ? (
-									<div className="w-4 h-4 rounded-full border-2 border-current border-t-transparent animate-spin" />
+									<div className="size-3 rounded-full border-2 border-current border-t-transparent animate-spin" />
 								) : (
-									<Trash2 className="w-4 h-4" />
+									<Trash2 className="size-3" />
 								)}
 							</Button>
 						)}
@@ -211,19 +198,4 @@ function getTypeColor(type: string) {
 		default:
 			return "bg-orange-500/10 text-orange-600 dark:text-orange-400";
 	}
-}
-
-function maskedTarget(target: string) {
-	if (target.includes("@")) return target;
-	if (target.includes("http")) {
-		try {
-			const url = new URL(target);
-			return `${url.hostname}...`;
-		} catch {
-			return "Webhook URL";
-		}
-	}
-	if (target.length > 10)
-		return `${target.substring(0, 4)}...${target.slice(-4)}`;
-	return target;
 }
