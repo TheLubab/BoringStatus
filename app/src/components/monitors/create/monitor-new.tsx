@@ -5,43 +5,43 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
+import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+import { createMonitor } from "@/modules/monitors/monitors.api";
 import {
 	type InsertMonitor,
 	insertMonitorSchema,
 } from "@/modules/monitors/monitors.zod";
 
-import { MonitorStepAlerting } from "./monitor-step-alerting";
-import { MonitorSuccess } from "./monitor-success";
-import { MonitorSelectType } from "./monitor-select-type";
-import { MonitorTargetInput } from "./monitor-target-input";
-import { Separator } from "@/components/ui/separator";
-import { MonitorSelectFrequency } from "./monitor-select-frequency";
 import { MonitorAdvancedOptions } from "./monitor-advanced-options";
 import { MonitorAlertRules } from "./monitor-alert-rules";
+import { MonitorSelectChannels } from "./monitor-select-channels";
+import { MonitorSelectFrequency } from "./monitor-select-frequency";
+import { MonitorSelectType } from "./monitor-select-type";
+import { MonitorSuccess } from "./monitor-success";
+import { MonitorTargetInput } from "./monitor-target-input";
 
 interface MonitorNewProps {
 	onComplete?: (data: InsertMonitor) => void;
-	onSubmitAction?: (data: InsertMonitor) => Promise<void>;
 	className?: string;
 	allowHighFrequency?: boolean;
 	allowAdvancedMethods?: boolean;
-	allowCustomStatus?: boolean;
 	allowCustomHeaders?: boolean;
-	usageLabel?: React.ReactNode;
+	maxAlertRules?: number;
+	allowAdvancedMetrics?: boolean;
 }
 
 export function MonitorNew({
 	onComplete,
-	onSubmitAction,
 	className,
 	allowHighFrequency = false,
 	allowAdvancedMethods = false,
-	allowCustomStatus = false,
 	allowCustomHeaders = false,
-	usageLabel,
+	maxAlertRules = 10,
+	allowAdvancedMetrics = false,
 }: MonitorNewProps) {
 	const [isSuccess, setIsSuccess] = useState(false);
+	const [newId, setNewId] = useState<string>();
 	const [isChecking, setIsChecking] = useState(false);
 	const [step, setStep] = useState(1);
 	const [showAdvancedOptions, setShowAdvancedOptions] =
@@ -57,7 +57,7 @@ export function MonitorNew({
 			timeout: 10,
 			config: {
 				method: "GET",
-				expectedStatus: "200",
+				expectedStatus: "200-299",
 				followRedirects: true,
 				headers: {},
 				body: "",
@@ -139,17 +139,14 @@ export function MonitorNew({
 		const data = values;
 		setIsChecking(true);
 
+		console.log("creating monitor", data);
 		try {
-			if (onSubmitAction) {
-				await onSubmitAction(data);
-			} else {
-				console.log("Creating Monitor:", data);
-			}
-
+			const res = await createMonitor({ data });
 			setIsChecking(false);
 			setIsSuccess(true);
+			setNewId(res.id);
 			toast.success("Monitor created successfully!");
-			if (onComplete) onComplete(data);
+			onComplete?.(data);
 		} catch (error) {
 			console.error(error);
 			setIsChecking(false);
@@ -157,18 +154,11 @@ export function MonitorNew({
 		}
 	};
 
-	const handleConfigureNew = () => {
-		setIsSuccess(false);
-		setStep(1);
-		form.reset();
-	};
-
 	if (isSuccess) {
 		return (
 			<MonitorSuccess
+				id={newId}
 				className={className}
-				onConfigureNew={handleConfigureNew}
-				allowHighFrequency={allowHighFrequency}
 				target={form.getValues("target")}
 			/>
 		);
@@ -200,13 +190,25 @@ export function MonitorNew({
 						)}
 						{step === 1 && <MonitorSelectType />}
 						{step === 1 && <MonitorTargetInput />}
-						{step === 1 && <MonitorSelectFrequency />}
+						{step === 1 && (
+							<MonitorSelectFrequency allowHighFrequency={allowHighFrequency} />
+						)}
 						{step === 1 && showAdvancedOptions && <Separator />}
-						{step === 1 && showAdvancedOptions && <MonitorAdvancedOptions />}
+						{step === 1 && showAdvancedOptions && (
+							<MonitorAdvancedOptions
+								allowAdvancedMethods={allowAdvancedMethods}
+								allowCustomHeaders={allowCustomHeaders}
+							/>
+						)}
 
-						{step === 2 && <MonitorAlertRules />}
+						{step === 2 && (
+							<MonitorAlertRules
+								maxRules={maxAlertRules}
+								allowAdvancedMetrics={allowAdvancedMetrics}
+							/>
+						)}
 
-						{step === 3 && <MonitorStepAlerting />}
+						{step === 3 && <MonitorSelectChannels />}
 					</main>
 
 					<footer className="rounded-b-3xl gap-3 px-6 py-3 border-t border-foreground/5 flex w-full animate-in slide-in-from-bottom bg-zinc-100">
@@ -225,7 +227,7 @@ export function MonitorNew({
 							<Button
 								type="button"
 								variant="outline"
-								onClick={() => setStep(1)}
+								onClick={() => setStep((s) => s - 1)}
 								className="ms-auto"
 							>
 								Back
@@ -247,17 +249,14 @@ export function MonitorNew({
 						{step === 3 && (
 							<Button
 								type="submit"
+								variant="default"
 								disabled={isChecking}
-								className={cn(
-									"flex-1 h-12 text-base font-semibold shadow-lg transition-all",
-									"bg-primary hover:bg-primary/90 text-primary-foreground",
-									isChecking ? "opacity-90" : "hover:scale-[1.01]",
-								)}
+								className={cn(isChecking ? "opacity-90" : "hover:scale-[1.01]")}
 							>
 								{isChecking ? (
 									<div className="flex items-center gap-2">
 										<div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-										Verifying connection...
+										Verifying...
 									</div>
 								) : (
 									"Create Monitor"

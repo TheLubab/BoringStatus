@@ -117,6 +117,7 @@ export function MonitorAlertRules({
 }: MonitorAlertRulesProps) {
 	const form = useFormContext<InsertMonitor>();
 	const type = useWatch({ control: form.control, name: "type" });
+	const alertRules = useWatch({ control: form.control, name: "alertRules" });
 
 	const { fields, append, remove } = useFieldArray({
 		control: form.control,
@@ -126,7 +127,7 @@ export function MonitorAlertRules({
 	useEffect(() => {
 		form.setValue("config.includesKeyword", undefined);
 		form.setValue("config.excludesKeyword", undefined);
-		fields.forEach((v) => {
+		alertRules.forEach((v) => {
 			if (v.metric === "body") {
 				if (v.operator === "contains") {
 					form.setValue("config.includesKeyword", v.value);
@@ -135,7 +136,7 @@ export function MonitorAlertRules({
 				}
 			}
 		});
-	}, [fields, form.setValue]);
+	}, [alertRules, form.setValue]);
 
 	const canAddMore = maxRules === undefined || fields.length < maxRules;
 
