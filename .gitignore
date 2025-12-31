@@ -16,3 +16,4 @@ todos.json
 .env*
 internal-only
 .tanstack
+!.env.example
