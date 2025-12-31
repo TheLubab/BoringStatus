@@ -94,7 +94,7 @@ type Status = keyof typeof statusToVariant;
 
 interface StatusBadgeProps
 	extends React.HTMLAttributes<HTMLDivElement>,
-		VariantProps<typeof statusBadgeVariants> {
+	VariantProps<typeof statusBadgeVariants> {
 	status?: Status;
 	pulse?: boolean;
 }
@@ -112,8 +112,10 @@ function StatusBadge({
 		? statusToVariant[status]
 		: (variant ?? "success");
 
-	const currentVariant = variantStyles[effectiveVariant];
-	const currentSize = sizeStyles[size!];
+	const currentVariant = Object.hasOwn(variantStyles, effectiveVariant)
+		? variantStyles[effectiveVariant]
+		: variantStyles.neutral;
+	const currentSize = sizeStyles[size];
 
 	return (
 		<div
