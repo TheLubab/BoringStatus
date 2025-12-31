@@ -1,5 +1,4 @@
--- Custom SQL migration file, put your code below! --
-SELECT create_hypertable('heartbeat', 'time', chunk_time_interval => INTERVAL '1 day');
+SELECT create_hypertable('heartbeat', 'time');
 
 ALTER TABLE heartbeat SET (
   timescaledb.compress = true,
@@ -7,6 +6,6 @@ ALTER TABLE heartbeat SET (
   timescaledb.compress_orderby = 'time DESC'
 );
 
-SELECT add_compression_policy('heartbeat', INTERVAL '3 days');
+SELECT add_compression_policy('heartbeat', INTERVAL '7 days');
 
-SELECT add_retention_policy('heartbeat', INTERVAL '90 days');
+SELECT add_retention_policy('heartbeat', INTERVAL '30 days');
