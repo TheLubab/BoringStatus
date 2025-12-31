@@ -1,4 +1,6 @@
-# Open Source Uptime Monitor
+# Open Source Uptime Monitor (WIP)
+
+Still work in progress, most features are not implemented yet!
 
 ## getting started
 
@@ -28,3 +30,9 @@ It exposes an api that agents can call to update a monitor status.
 An agent is an independant executable that watches something and inform the app.
 
 Usually, it pings a URL for 200 status. But it can do anything you want it to.
+
+### data
+
+Postgres for all data and relations.
+
+TimescaleDB to manage heartbeats.
