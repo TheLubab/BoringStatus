@@ -2,6 +2,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
 
+import { DevToolbar } from "@/components/dev/dev-toolbar";
 import { MonitorList } from "@/components/monitors/list/monitor-list";
 import { Button } from "@/components/ui/button";
 import { getMonitorsByOrgForDashboard } from "@/modules/monitors/monitors.api";
@@ -15,6 +16,7 @@ function MonitorsPage() {
 		queryKey: ["monitors"],
 		queryFn: () => getMonitorsByOrgForDashboard(),
 	});
+	console.log(data);
 
 	const router = useRouter();
 
@@ -39,6 +41,9 @@ function MonitorsPage() {
 					})
 				}
 			/>
+
+			{/* Dev toolbar - only shows in development */}
+			<DevToolbar monitors={data} />
 		</div>
 	);
 }
