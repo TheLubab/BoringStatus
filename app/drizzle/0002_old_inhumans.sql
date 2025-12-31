@@ -25,6 +25,10 @@ FROM heartbeat
 GROUP BY monitor_id, bucket
 WITH NO DATA;
 
+
+-- We may need to enable this if we have too many monitors
+ALTER MATERIALIZED VIEW monitor_stats_hourly SET (timescaledb.materialized_only = false);
+
 -- runs every 5 minutes, processes data from 6h ago to almost present
 SELECT add_continuous_aggregate_policy('monitor_stats_hourly',
     start_offset => INTERVAL '6 hours',

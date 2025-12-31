@@ -15,6 +15,13 @@
       "when": 1766854566309,
       "tag": "0001_dazzling_wendell_vaughn",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1767196705080,
+      "tag": "0002_old_inhumans",
+      "breakpoints": true
     }
   ]
 }
