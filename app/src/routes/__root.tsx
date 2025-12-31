@@ -9,6 +9,7 @@ import {
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 
 import { Toaster } from "@/components/ui/sonner";
+import BoringDevtoolsPlugin from "@/integrations/devtools/boring-devtools-plugin";
 import { getSession } from "@/modules/auth/auth.api";
 import { Providers } from "@/providers";
 
@@ -99,6 +100,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 							render: <TanStackRouterDevtoolsPanel />,
 						},
 						TanStackQueryDevtools,
+						BoringDevtoolsPlugin,
 					]}
 				/>
 				{/** biome-ignore lint/correctness/useUniqueElementIds: :p */}
