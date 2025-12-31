@@ -107,39 +107,75 @@ export const getMonitorsByOrgForDashboard = createServerFn({
 
 	const monitorIds = monitors.map((m) => m.id);
 
-	// 2. Aggregate uptime from continuous aggregate 
-	const uptimeStats = await db.execute<{ monitor_id: string; uptime: number }>(sql`
+	// 2. Aggregate uptime from continuous aggregate
+	const uptimeStats = await db.execute<{
+		monitor_id: string;
+		uptime: number | null;
+	}>(sql`
         SELECT 
             monitor_id,
-            COALESCE(SUM(up_count)::float / NULLIF(SUM(total_checks), 0) * 100, 100) AS uptime
+						CASE 
+								WHEN SUM(total_checks) IS NULL OR SUM(total_checks) = 0 THEN NULL
+								ELSE ROUND((SUM(up_count)::numeric / SUM(total_checks)::numeric) * 100, 2)::int
+						END AS uptime
         FROM monitor_stats_hourly
         WHERE monitor_id IN (${sql.join(monitorIds, sql`, `)})
-          AND bucket > NOW() - INTERVAL '24 hours'
+          AND bucket >= NOW() - INTERVAL '24 hours'
         GROUP BY monitor_id
     `);
 
-	// 3. Get recent latencies 
-	const latencyStats = await db.execute<{ monitor_id: string; latency_history: number[] }>(sql`
-        SELECT 
-            monitor_id,
-            COALESCE(ARRAY_AGG(latency ORDER BY time DESC), ARRAY[]::int[]) AS latency_history
-        FROM (
-            SELECT monitor_id, latency, time
-            FROM heartbeat
-            WHERE monitor_id IN (${sql.join(monitorIds, sql`, `)})
-              AND time > NOW() - INTERVAL '4 hours'
-            ORDER BY time DESC
-            LIMIT 50
-        ) recent
-        GROUP BY monitor_id
+	// 3. Get recent latencies
+	const latencyStats = await db.execute<{
+		monitor_id: string;
+		history: Array<{
+			x: string;
+			y: number | null; // null = no data for this hour
+			up: boolean | null; // null = no data, false = was down, true = was up
+		}>;
+	}>(sql`
+				SELECT 
+						monitor_id,
+						json_agg(
+										json_build_object(
+												'x', hour, 
+												'y', avg_latency,
+												'up', CASE 
+													WHEN total_checks IS NULL OR total_checks = 0 THEN NULL
+													WHEN up_count > 0 THEN TRUE
+													ELSE FALSE
+												END
+										) ORDER BY hour
+						) as history
+				FROM (
+						SELECT 
+								time_bucket_gapfill('1 hour', bucket, NOW() - INTERVAL '24 hours', NOW()) AS hour,
+								monitor_id,
+								AVG(avg_latency) as avg_latency,
+								SUM(up_count) as up_count,
+								SUM(total_checks) as total_checks
+						FROM monitor_stats_hourly
+						WHERE monitor_id IN (${sql.join(monitorIds, sql`, `)})
+							AND bucket >= NOW() - INTERVAL '24 hours'
+						GROUP BY hour, monitor_id
+				) AS filled_data
+				GROUP BY monitor_id;
     `);
 
 	// 4. Build lookup maps
-	const uptimeMap = new Map(uptimeStats.rows.map((s) => [s.monitor_id, s.uptime]));
-	const latencyMap = new Map(latencyStats.rows.map((s) => [s.monitor_id, s.latency_history]));
+	const uptimeMap = new Map(
+		uptimeStats.rows.map((s) => [s.monitor_id, s.uptime]),
+	);
+	const latencyMap = new Map(
+		latencyStats.rows.map((s) => [s.monitor_id, s.history]),
+	);
 
 	// 5. Get recent issues (down/error heartbeats)
-	const issueHeartbeats = await db.execute<{ monitor_id: string; message: string | null; status: string }>(sql`
+	// TODO: remove, instead add new table for incidents
+	const issueHeartbeats = await db.execute<{
+		monitor_id: string;
+		message: string | null;
+		status: string;
+	}>(sql`
         SELECT DISTINCT ON (monitor_id) 
             monitor_id, message, status
         FROM heartbeat
@@ -159,8 +195,8 @@ export const getMonitorsByOrgForDashboard = createServerFn({
 	// 6. Map to DashboardMonitor
 	return monitors.map((m) => ({
 		...m,
-		uptime: uptimeMap.get(m.id) ?? 100,
-		latencyHistory: latencyMap.get(m.id)?.slice(0, 50) ?? [],
+		uptime: uptimeMap.get(m.id) ?? null,
+		history: latencyMap.get(m.id) ?? null,
 		issues: issuesMap.get(m.id) ?? [],
 	}));
 });

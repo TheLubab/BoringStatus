@@ -161,7 +161,11 @@ export interface MonitorIssue {
 }
 
 export interface DashboardMonitor extends Monitor {
-	uptime: number;
-	latencyHistory: number[];
-	issues: MonitorIssue[];
+	uptime: number | null;
+	history: Array<{
+		x: string; // ISO Timestamp
+		y: number | null; // Latency (null = no data for this hour)
+		up: boolean | null; // Was it up? (null = no data, false = down, true = up)
+	}> | null;
+	issues: MonitorIssue[] | null;
 }
