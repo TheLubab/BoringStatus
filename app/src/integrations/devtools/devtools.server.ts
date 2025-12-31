@@ -128,6 +128,136 @@ export const deleteMonitorDev = createServerFn({ method: "POST" })
         return { deleted: true };
     });
 
+// Delete ALL monitors
+export const deleteAllMonitors = createServerFn({ method: "POST" }).handler(async () => {
+    const orgId = await requireAuth();
+    requireDev();
+
+    const monitors = await db.query.monitor.findMany({
+        where: eq(monitor.organizationId, orgId),
+        columns: { id: true },
+    });
+
+    await db.transaction(async (tx) => {
+        for (const m of monitors) {
+            await tx.delete(heartbeat).where(eq(heartbeat.monitorId, m.id));
+        }
+        await tx.delete(monitor).where(eq(monitor.organizationId, orgId));
+    });
+
+    return { deleted: monitors.length };
+});
+
+// Seed demo data - creates 5 monitors with different patterns
+export const seedDemoData = createServerFn({ method: "POST" }).handler(async () => {
+    const orgId = await requireAuth();
+    requireDev();
+
+    const scenarios: Array<{ name: string; type: "http" | "tcp" | "ping"; pattern: Pattern }> = [
+        { name: "Production API", type: "http", pattern: "stable" },
+        { name: "Staging Server", type: "http", pattern: "degrading" },
+        { name: "Database Primary", type: "tcp", pattern: "stable" },
+        { name: "Payment Gateway", type: "http", pattern: "incident" },
+        { name: "CDN Edge", type: "ping", pattern: "intermittent" },
+    ];
+
+    const created: string[] = [];
+
+    for (const scenario of scenarios) {
+        const domain = scenario.name.toLowerCase().replace(/\s+/g, "-");
+        let target: string;
+        // biome-ignore lint/suspicious/noExplicitAny: Dynamic config
+        let config: any;
+
+        switch (scenario.type) {
+            case "http":
+                target = `https://${domain}.example.com/health`;
+                config = { method: "GET", expectedStatus: "200", followRedirects: true };
+                break;
+            case "tcp":
+                target = `${domain}.example.com`;
+                config = { port: 5432, protocol: "TCP" };
+                break;
+            case "ping":
+                target = `${domain}.example.com`;
+                config = {};
+                break;
+        }
+
+        const [newMonitor] = await db
+            .insert(monitor)
+            .values({
+                name: scenario.name,
+                target,
+                type: scenario.type as MonitorType,
+                frequency: 60,
+                timeout: 30,
+                organizationId: orgId,
+                active: true,
+                status: "pending" as MonitorStatus,
+                regions: ["default"],
+                alertRules: [],
+                config,
+            })
+            .returning({ id: monitor.id, name: monitor.name });
+
+        // Generate 24h of heartbeats with the pattern
+        await simulateRealisticHeartbeats({
+            data: {
+                monitorId: newMonitor.id,
+                pattern: scenario.pattern,
+                minutes: 1440,
+                interval: 5,
+            },
+        });
+
+        created.push(newMonitor.name);
+    }
+
+    return { created };
+});
+
+// Trigger a specific status for a monitor
+export const triggerStatus = createServerFn({ method: "POST" })
+    .inputValidator(z.object({
+        monitorId: z.string().uuid(),
+        status: z.enum(["up", "down", "degraded", "error"]),
+    }))
+    .handler(async ({ data }) => {
+        const orgId = await requireAuth();
+        requireDev();
+
+        const mon = await db.query.monitor.findFirst({
+            where: eq(monitor.id, data.monitorId),
+            columns: { id: true, type: true, organizationId: true },
+        });
+        if (!mon || mon.organizationId !== orgId) throw new Error("Monitor not found");
+
+        const now = new Date();
+        const status = data.status as HeartbeatStatus;
+        const latency = status === "up" ? 50 : status === "degraded" ? 500 : 0;
+        const metrics = generateMetrics(mon.type as MonitorType, status === "up" ? 1 : status === "degraded" ? 5 : 10, status);
+
+        await db.transaction(async (tx) => {
+            await tx.insert(heartbeat).values({
+                time: now,
+                monitorId: data.monitorId,
+                region: "default",
+                status,
+                latency,
+                message: status === "down" ? "Connection refused" : status === "error" ? "Timeout" : null,
+                metrics,
+            });
+
+            await tx.update(monitor).set({
+                status,
+                lastCheckAt: now,
+            }).where(eq(monitor.id, data.monitorId));
+        });
+
+        return { status, monitorId: data.monitorId };
+    });
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Heartbeats
 // ─────────────────────────────────────────────────────────────────────────────

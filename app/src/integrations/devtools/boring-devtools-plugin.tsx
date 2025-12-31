@@ -1,5 +1,6 @@
 "use client";
 
+import { BrandLogo } from "@/components/dashboard/header/brand-logo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
@@ -24,7 +25,7 @@ const TIME_RANGES: Record<TimeRange, { label: string; minutes: number; interval:
 };
 
 export const BoringDevtoolsPlugin = {
-    name: "Boring Status",
+    name: "BoringStatus",
     render: <DevPanel />,
 };
 
@@ -101,11 +102,50 @@ function DevPanel() {
         },
     });
 
+    const seedDemo = useMutation({
+        mutationFn: async () => {
+            const mod = await import("./devtools.server");
+            return mod.seedDemoData();
+        },
+        onSuccess: (r) => {
+            addLog(`✓ Created ${r.created.length} monitors`);
+            invalidate();
+        },
+    });
+
+    const triggerStatus = useMutation({
+        mutationFn: async (status: "up" | "down" | "degraded" | "error") => {
+            const mod = await import("./devtools.server");
+            return mod.triggerStatus({ data: { monitorId: monitor, status } });
+        },
+        onSuccess: (r) => {
+            addLog(`✓ Triggered ${r.status}`);
+            invalidate();
+        },
+    });
+
+    const deleteAll = useMutation({
+        mutationFn: async () => {
+            const mod = await import("./devtools.server");
+            return mod.deleteAllMonitors();
+        },
+        onSuccess: (r) => {
+            addLog(`✓ Deleted ${r.deleted} monitors`);
+            invalidate();
+        },
+    });
+
     const handleGenerate = async () => {
         if (!monitor) return;
         addLog(`Generating ${TIME_RANGES[time].label} ${pattern}...`);
         await simulate.mutateAsync(monitor);
         addLog("✓ Done");
+    };
+
+    const handleSeed = () => {
+        if (confirm("Create 5 demo monitors with history?")) {
+            seedDemo.mutate();
+        }
     };
 
     const handleClear = () => {
@@ -125,13 +165,20 @@ function DevPanel() {
         }
     };
 
-    const pending = simulate.isPending || clearHeartbeats.isPending || deleteMonitor.isPending || createMonitor.isPending || refreshAgg.isPending;
+    const handleDeleteAll = () => {
+        if (confirm("⚠️ DANGER: DELETE ALL MONITORS?\n\nThis will remove all monitors and heartbeats. This action cannot be undone.")) {
+            deleteAll.mutate();
+            setMonitor("");
+        }
+    };
+
+    const pending = simulate.isPending || clearHeartbeats.isPending || deleteMonitor.isPending || createMonitor.isPending || refreshAgg.isPending || seedDemo.isPending || triggerStatus.isPending || deleteAll.isPending;
     const selectedName = monitor ? monitors.find((m) => m.id === monitor)?.name : null;
 
     return (
         <div style={styles.container}>
             <div style={styles.header}>
-                <b>⚗️ Dev Tools</b>
+                <Logo />
                 <span style={styles.badge}>{monitors.length} monitors</span>
             </div>
 
@@ -142,6 +189,7 @@ function DevPanel() {
                         <Btn onClick={() => createMonitor.mutate("tcp")} disabled={pending}>+ TCP</Btn>
                         <Btn onClick={() => createMonitor.mutate("ping")} disabled={pending}>+ Ping</Btn>
                         <Btn onClick={() => refreshAgg.mutate()} disabled={pending} color="#666">Refresh Agg</Btn>
+                        <Btn onClick={handleSeed} disabled={pending} color="#8b5cf6">Seed Demo</Btn>
                     </div>
                 </Section>
 
@@ -150,6 +198,15 @@ function DevPanel() {
                         <option value="">Select a monitor...</option>
                         {monitors.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
                     </select>
+                </Section>
+
+                <Section title="Trigger Status">
+                    <div style={styles.row}>
+                        <Btn onClick={() => triggerStatus.mutate("up")} disabled={pending || !monitor} color="#22c55e">UP</Btn>
+                        <Btn onClick={() => triggerStatus.mutate("degraded")} disabled={pending || !monitor} color="#eab308">DEGRADED</Btn>
+                        <Btn onClick={() => triggerStatus.mutate("down")} disabled={pending || !monitor} color="#ef4444">DOWN</Btn>
+                        <Btn onClick={() => triggerStatus.mutate("error")} disabled={pending || !monitor} color="#71717a">ERROR</Btn>
+                    </div>
                 </Section>
 
                 <Section title="Generate Heartbeats">
@@ -172,6 +229,7 @@ function DevPanel() {
                     <div style={styles.row}>
                         <Btn color="#ef4444" onClick={handleClear} disabled={pending || !monitor}>Clear Heartbeats</Btn>
                         <Btn color="#ef4444" onClick={handleDelete} disabled={pending || !monitor}>Delete Monitor</Btn>
+                        <Btn color="#ef4444" onClick={handleDeleteAll} disabled={pending || !monitors.length} style={{ opacity: 0.8 }}>Delete ALL</Btn>
                     </div>
                 </Section>
             </div>
@@ -212,6 +270,14 @@ const Btn = ({ onClick, disabled, color = "#2563eb", style, children }: { onClic
     <button type="button" onClick={onClick} disabled={disabled} style={{ padding: "6px 10px", background: disabled ? "#333" : color, border: "none", borderRadius: 4, color: "#fff", fontSize: 10, fontWeight: 600, cursor: disabled ? "not-allowed" : "pointer", opacity: disabled ? 0.6 : 1, ...style }}>
         {children}
     </button>
+);
+
+const Logo = () => (
+    <div style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: 700, color: "#fff", fontSize: 13 }}>
+        <BrandLogo />
+        /
+        <span style={{ fontWeight: 400, color: "#666", marginLeft: 4 }}>Dev Tools</span>
+    </div>
 );
 
 export default BoringDevtoolsPlugin;
