@@ -16,7 +16,7 @@ export const heartbeat = pgTable(
 	"heartbeat",
 	{
 		// TimescaleDB key
-		time: timestamp("time").defaultNow().notNull(),
+		time: timestamp("time", { withTimezone: true }).defaultNow().notNull(),
 
 		monitorId: uuid("monitor_id")
 			.notNull()
