@@ -71,7 +71,7 @@ export function ChannelList({
 							<input
 								checked={isSelected}
 								type="radio"
-								onChange={() => { }}
+								onChange={() => {}}
 								onClick={() => {
 									if (isSelected) {
 										onSelectionChange?.(

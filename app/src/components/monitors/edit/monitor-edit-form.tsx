@@ -1,18 +1,19 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { Form } from "@/components/ui/form";
-import {
-	insertMonitorSchema,
-	type InsertMonitor,
-} from "@/modules/monitors/monitors.zod";
-import { MonitorStepAlerting } from "@/components/monitors/create/monitor-step-alerting";
-import { MonitorStepGeneral } from "@/components/monitors/create/monitor-step-general";
-import { updateMonitor } from "@/modules/monitors/monitors.api";
 import { useRouter } from "@tanstack/react-router";
 import { Loader2, Save } from "lucide-react";
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+
+import { MonitorStepAlerting } from "@/components/monitors/create/monitor-step-alerting";
+import { MonitorStepGeneral } from "@/components/monitors/create/monitor-step-general";
+import { Button } from "@/components/ui/button";
+import { Form } from "@/components/ui/form";
+import { updateMonitor } from "@/modules/monitors/monitors.api";
+import {
+	type InsertMonitor,
+	insertMonitorSchema,
+} from "@/modules/monitors/monitors.zod";
 
 interface MonitorEditFormProps {
 	monitor: any;

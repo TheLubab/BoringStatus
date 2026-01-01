@@ -47,8 +47,8 @@ import { createChannel } from "@/modules/integrations/integrations.api";
 import type { NotificationChannel } from "@/modules/integrations/integrations.schema";
 import {
 	type InsertNotificationChannel,
-	type NotificationChannelType,
 	insertNotificationChannelSchema,
+	type NotificationChannelType,
 } from "@/modules/integrations/integrations.zod";
 
 interface ChannelAddDialogProps {
@@ -388,38 +388,38 @@ export function ChannelAddForm({
 							{(selectedType === "slack" ||
 								selectedType === "discord" ||
 								selectedType === "webhook") && (
-									<FormField
-										control={form.control}
-										name="webhookUrl"
-										render={({ field }) => (
-											<FormItem>
-												<div className="flex items-center justify-between">
-													<FormLabel>Webhook URL</FormLabel>
-													{selectedType !== "webhook" && (
-														<a
-															href={getSetupDocsUrl(selectedType)}
-															target="_blank"
-															rel="noopener noreferrer"
-															className="text-[11px] text-muted-foreground/70 hover:text-foreground inline-flex items-center gap-0.5 transition-colors duration-100"
-														>
-															Setup guide
-															<ExternalLink className="size-2.5" />
-														</a>
-													)}
-												</div>
-												<FormControl>
-													<Input
-														type="url"
-														placeholder={getWebhookPlaceholder(selectedType)}
-														className="font-mono text-[13px]"
-														{...field}
-													/>
-												</FormControl>
-												<FormMessage />
-											</FormItem>
-										)}
-									/>
-								)}
+								<FormField
+									control={form.control}
+									name="webhookUrl"
+									render={({ field }) => (
+										<FormItem>
+											<div className="flex items-center justify-between">
+												<FormLabel>Webhook URL</FormLabel>
+												{selectedType !== "webhook" && (
+													<a
+														href={getSetupDocsUrl(selectedType)}
+														target="_blank"
+														rel="noopener noreferrer"
+														className="text-[11px] text-muted-foreground/70 hover:text-foreground inline-flex items-center gap-0.5 transition-colors duration-100"
+													>
+														Setup guide
+														<ExternalLink className="size-2.5" />
+													</a>
+												)}
+											</div>
+											<FormControl>
+												<Input
+													type="url"
+													placeholder={getWebhookPlaceholder(selectedType)}
+													className="font-mono text-[13px]"
+													{...field}
+												/>
+											</FormControl>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+							)}
 
 							{selectedType === "webhook" && (
 								<Collapsible open={exampleOpen} onOpenChange={setExampleOpen}>

@@ -217,7 +217,6 @@ export function MonitorAdvancedOptions({
 						)}
 					/>
 
-
 					{/* Custom Headers */}
 					<div className="space-y-3">
 						<span className="text-sm font-medium flex items-center gap-2">

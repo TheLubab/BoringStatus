@@ -9,7 +9,7 @@ export const MonitorNameCell = ({ name, url }: MonitorNameCellProps) => {
 	let link: URL | undefined;
 	try {
 		link = new URL(url);
-	} catch { }
+	} catch {}
 
 	const displayUrl = url.length > 40 ? `${url.slice(0, 38)}…` : url;
 

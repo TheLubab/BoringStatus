@@ -1,9 +1,9 @@
 import {
+	AlertTriangleIcon,
 	CheckIcon,
 	InfoIcon,
 	Loader2Icon,
 	XIcon,
-	AlertTriangleIcon,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Toaster as Sonner, type ToasterProps } from "sonner";
@@ -23,7 +23,9 @@ const Toaster = ({ ...props }: ToasterProps) => {
 				info: <InfoIcon className="size-3.5" strokeWidth={2} />,
 				warning: <AlertTriangleIcon className="size-3.5" strokeWidth={2} />,
 				error: <XIcon className="size-3.5" strokeWidth={2.5} />,
-				loading: <Loader2Icon className="size-3.5 animate-spin" strokeWidth={2} />,
+				loading: (
+					<Loader2Icon className="size-3.5 animate-spin" strokeWidth={2} />
+				),
 			}}
 			toastOptions={{
 				unstyled: false,

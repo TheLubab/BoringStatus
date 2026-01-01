@@ -1,5 +1,6 @@
-import type * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
+import type * as React from "react";
+
 import { cn } from "@/lib/utils";
 
 const statusBadgeVariants = cva(
@@ -95,7 +96,7 @@ type Status = keyof typeof statusToVariant;
 
 interface StatusBadgeProps
 	extends React.HTMLAttributes<HTMLDivElement>,
-	VariantProps<typeof statusBadgeVariants> {
+		VariantProps<typeof statusBadgeVariants> {
 	status?: Status;
 	pulse?: boolean;
 }

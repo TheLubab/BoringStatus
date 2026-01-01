@@ -14,7 +14,7 @@ export const UptimeCell = ({ uptime }: UptimeCellProps) => {
 	}
 
 	let colorClass = "text-muted-foreground/40";
-	let bgClass = "";
+	const bgClass = "";
 	if (uptime < 98) {
 		colorClass = "text-amber-600";
 	}

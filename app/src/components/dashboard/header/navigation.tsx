@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Activity, Megaphone, PanelTop, Webhook } from "lucide-react";
+import { Activity, Webhook } from "lucide-react";
 
 const NAV_ITEMS = [
 	{ label: "Monitors", href: "/monitors", icon: Activity },

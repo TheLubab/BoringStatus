@@ -1,4 +1,5 @@
 import { Plus, X } from "lucide-react";
+import { useEffect } from "react";
 import { useFieldArray, useFormContext, useWatch } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
@@ -22,7 +23,6 @@ import type {
 	InsertMonitor,
 	MonitorType,
 } from "@/modules/monitors/monitors.zod";
-import { useEffect } from "react";
 
 // - HTTP: dns, connect, ttfb, total, statusCode, tls, contentLength, includesKeyword, excludesKeyword
 // - Ping: latency, jitter, packetLoss

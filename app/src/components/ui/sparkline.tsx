@@ -232,8 +232,8 @@ export const Sparkline = memo(function Sparkline({
 					style={
 						animate
 							? {
-								animation: `sparkline-draw 600ms ease-out ${100 + i * 80}ms forwards`,
-							}
+									animation: `sparkline-draw 600ms ease-out ${100 + i * 80}ms forwards`,
+								}
 							: undefined
 					}
 				/>
