@@ -6,7 +6,7 @@ import { db } from "@/db";
 import { getSession } from "@/modules/auth/auth.api";
 
 import { monitor, monitorsToChannels } from "./monitors.schema";
-import { insertMonitorSchema, type DashboardMonitor } from "./monitors.zod";
+import { type DashboardMonitor, insertMonitorSchema } from "./monitors.zod";
 import { notificationChannel } from "../integrations/integrations.schema";
 
 // Helper to ensure auth and org
@@ -148,7 +148,7 @@ export const getMonitorsByOrgForDashboard = createServerFn({
 						) as history
 				FROM (
 						SELECT 
-								time_bucket_gapfill('1 hour', bucket, NOW() - INTERVAL '24 hours', NOW()) AS hour,
+								time_bucket_gapfill('1 hour', bucket, NOW() - INTERVAL '23 hours', NOW()) AS hour,
 								monitor_id,
 								AVG(avg_latency) as avg_latency,
 								SUM(up_count) as up_count,
