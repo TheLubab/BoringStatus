@@ -160,12 +160,14 @@ export interface MonitorIssue {
 	message: string;
 }
 
+export interface DashboardHistoryEntry {
+	x: string; // ISO Timestamp
+	y: number | null; // Latency (null = no data for this hour)
+	up: boolean | null; // Was it up? (null = no data, false = down, true = up)
+}
+
 export interface DashboardMonitor extends Monitor {
 	uptime: number | null;
-	history: Array<{
-		x: string; // ISO Timestamp
-		y: number | null; // Latency (null = no data for this hour)
-		up: boolean | null; // Was it up? (null = no data, false = down, true = up)
-	}> | null;
+	history: Array<DashboardHistoryEntry> | null;
 	issues: MonitorIssue[] | null;
 }
