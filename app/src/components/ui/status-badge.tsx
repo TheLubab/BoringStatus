@@ -88,6 +88,7 @@ const statusToVariant = {
 	maintenance: "warning",
 	pending: "neutral",
 	error: "error",
+	degraded: "warning",
 } as const;
 
 type Status = keyof typeof statusToVariant;
