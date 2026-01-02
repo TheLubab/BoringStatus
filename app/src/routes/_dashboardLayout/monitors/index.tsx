@@ -15,7 +15,6 @@ function MonitorsPage() {
 		queryKey: ["monitors"],
 		queryFn: () => getMonitorsByOrgForDashboard(),
 	});
-	console.log(data);
 
 	const router = useRouter();
 
