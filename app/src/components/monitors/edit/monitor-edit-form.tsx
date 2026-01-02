@@ -5,8 +5,12 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
-import { MonitorStepAlerting } from "@/components/monitors/create/monitor-step-alerting";
-import { MonitorStepGeneral } from "@/components/monitors/create/monitor-step-general";
+import { MonitorAdvancedOptions } from "@/components/monitors/create/monitor-advanced-options";
+import { MonitorAlertRules } from "@/components/monitors/create/monitor-alert-rules";
+import { MonitorSelectChannels } from "@/components/monitors/create/monitor-select-channels";
+import { MonitorSelectFrequency } from "@/components/monitors/create/monitor-select-frequency";
+import { MonitorSelectType } from "@/components/monitors/create/monitor-select-type";
+import { MonitorTargetInput } from "@/components/monitors/create/monitor-target-input";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { updateMonitor } from "@/modules/monitors/monitors.api";
@@ -66,20 +70,36 @@ export function MonitorEditForm({
 	return (
 		<Form {...form}>
 			<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 py-4">
+				{/* General Configuration */}
 				<div className="bg-card rounded-lg border p-6 shadow-sm">
 					<h2 className="text-lg font-semibold mb-6">General Configuration</h2>
-					<MonitorStepGeneral
-						allowHighFrequency={true} // Assuming user can edit whatever they have
+					<div className="space-y-6">
+						<MonitorSelectType />
+						<MonitorTargetInput />
+						<MonitorSelectFrequency allowHighFrequency={true} />
+					</div>
+				</div>
+
+				{/* Advanced Options */}
+				<div className="bg-card rounded-lg border p-6 shadow-sm">
+					<h2 className="text-lg font-semibold mb-6">Advanced Options</h2>
+					<MonitorAdvancedOptions
 						allowAdvancedMethods={true}
-						allowCustomStatus={true}
 						allowCustomHeaders={true}
 					/>
 				</div>
 
+				{/* Alert Rules */}
 				<div className="bg-card rounded-lg border p-6 shadow-sm">
-					<MonitorStepAlerting />
+					<MonitorAlertRules maxRules={10} allowAdvancedMetrics={true} />
 				</div>
 
+				{/* Notification Channels */}
+				<div className="bg-card rounded-lg border p-6 shadow-sm">
+					<MonitorSelectChannels />
+				</div>
+
+				{/* Submit Button */}
 				<div className="flex justify-end sticky bottom-4 z-10">
 					<Button type="submit" size="lg" disabled={isSaving}>
 						{isSaving ? (
