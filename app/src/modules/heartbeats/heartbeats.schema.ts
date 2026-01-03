@@ -1,3 +1,4 @@
+import type { InferSelectModel } from "drizzle-orm";
 import {
 	index,
 	integer,
@@ -35,3 +36,5 @@ export const heartbeat = pgTable(
 	},
 	(t) => [index("idx_heartbeat_monitor_time").on(t.monitorId, t.time.desc())],
 );
+
+export type SelectHeartbeat = InferSelectModel<typeof heartbeat>;
