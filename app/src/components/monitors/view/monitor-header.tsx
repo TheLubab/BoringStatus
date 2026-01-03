@@ -20,12 +20,12 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import type { Monitor } from "@/modules/monitors/monitors.zod";
 import { StatusBadge } from "@/components/ui/status-badge";
+import { cn } from "@/lib/utils";
+import type { SelectMonitor } from "@/modules/monitors/monitors.schema";
 
 interface MonitorHeaderProps {
-	monitor: Monitor;
+	monitor: SelectMonitor;
 	isActive: boolean;
 	onToggle: () => void;
 	onDelete: () => void;
