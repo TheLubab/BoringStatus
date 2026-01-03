@@ -2,10 +2,9 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 
 import { MonitorView } from "@/components/monitors/view/monitor-view";
-import { getHeartbeatsForMonitor } from "@/modules/heartbeats/heartbeats.api";
 import {
 	deleteMonitor,
-	getMonitorById,
+	getMonitorDetails,
 	toggleMonitorActive,
 } from "@/modules/monitors/monitors.api";
 
@@ -18,19 +17,8 @@ function MonitorDetailsPage() {
 	const router = useRouter();
 
 	const { data: monitor } = useSuspenseQuery({
-		queryKey: ["monitor", monitorId],
-		queryFn: () => getMonitorById({ data: { id: monitorId } }),
-	});
-
-	const now = new Date();
-	const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-
-	const { data: heartbeats = [] } = useSuspenseQuery({
-		queryKey: ["heartbeats", monitorId, "24h"],
-		queryFn: () =>
-			getHeartbeatsForMonitor({
-				data: { monitorId, from: twentyFourHoursAgo, to: now },
-			}),
+		queryKey: ["monitor-details", monitorId],
+		queryFn: () => getMonitorDetails({ data: { id: monitorId } }),
 	});
 
 	const handleToggleActive = async () => {
@@ -49,7 +37,6 @@ function MonitorDetailsPage() {
 		<div className="m-auto py-8 px-4 w-full">
 			<MonitorView
 				monitor={monitor}
-				heartbeats={heartbeats}
 				onToggleActive={handleToggleActive}
 				onDelete={handleDelete}
 			/>
