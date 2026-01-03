@@ -1,162 +1,30 @@
-import { Link } from "@tanstack/react-router";
-import {
-	Activity,
-	AlertTriangle,
-	ArrowLeft,
-	CheckCircle2,
-	Clock,
-	ExternalLink,
-	Globe,
-	History,
-	MoreVertical,
-	PauseCircle,
-	PlayCircle,
-	Settings,
-	Trash2,
-	XCircle,
-} from "lucide-react";
-import { useMemo } from "react";
+import { Activity, BarChart3, Clock, Settings, Zap } from "lucide-react";
+import { useCallback, useId, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { MonitorEditForm } from "@/components/monitors/edit/monitor-edit-form";
-import { LatencyChart } from "@/components/monitors/list/cells";
-import {
-	AlertDialog,
-	AlertDialogAction,
-	AlertDialogCancel,
-	AlertDialogContent,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogHeader,
-	AlertDialogTitle,
-	AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuSeparator,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { cn } from "@/lib/utils";
-import type { HeartbeatStatus } from "@/modules/heartbeats/heartbeats.zod";
-import type { Monitor } from "@/modules/monitors/monitors.zod";
 
-// Types
-interface Heartbeat {
-	time: Date;
-	status: HeartbeatStatus;
-	latency: number | null;
-	message: string | null;
-	metrics: Record<string, unknown>;
-}
+import type {
+	MonitorDetails,
+	MonitorDetailsHistoryEntry,
+} from "@/modules/monitors/monitors.zod";
+
+import { MonitorHeader } from "./monitor-header";
+import { StatsGrid } from "./monitor-stats";
+import { RecentChecksCard } from "./recent-checks-card";
 
 interface MonitorViewProps {
-	monitor: Monitor & { channelIds: string[] };
-	heartbeats: Heartbeat[];
+	monitor: MonitorDetails;
 	onToggleActive: () => Promise<void>;
 	onDelete: () => Promise<void>;
 }
 
-// Helpers
-function computeMonitorData(heartbeats: Heartbeat[]) {
-	const recentChecks = heartbeats.slice(0, 10).map((hb) => ({
-		time: hb.time,
-		status: hb.status,
-		latency: hb.latency ?? 0,
-		statusCode:
-			"statusCode" in hb.metrics
-				? (hb.metrics.statusCode as number)
-				: undefined,
-		message: hb.message,
-	}));
-
-	const validLatencies = heartbeats
-		.filter((hb) => hb.latency !== null && hb.latency !== undefined)
-		.map((hb) => hb.latency as number);
-	const avgLatency =
-		validLatencies.length > 0
-			? Math.round(
-				validLatencies.reduce((a, b) => a + b, 0) / validLatencies.length,
-			)
-			: 0;
-
-	const upCount = heartbeats.filter((hb) => hb.status === "up").length;
-	const totalCount = heartbeats.length;
-	const uptime24h =
-		totalCount > 0 ? Math.round((upCount / totalCount) * 100 * 100) / 100 : 0;
-
-	const hourlyData = new Map<
-		string,
-		{ latencies: number[]; upCount: number; downCount: number }
-	>();
-
-	for (const hb of heartbeats) {
-		const hour = new Date(hb.time);
-		hour.setMinutes(0, 0, 0);
-		const hourKey = hour.toISOString();
-
-		if (!hourlyData.has(hourKey)) {
-			hourlyData.set(hourKey, { latencies: [], upCount: 0, downCount: 0 });
-		}
-
-		const data = hourlyData.get(hourKey)!;
-		if (hb.latency != null) {
-			data.latencies.push(hb.latency);
-		}
-		if (hb.status === "up") {
-			data.upCount++;
-		} else if (hb.status === "down" || hb.status === "error") {
-			data.downCount++;
-		}
-	}
-
-	const historyData = Array.from(hourlyData.entries())
-		.sort(([a], [b]) => new Date(a).getTime() - new Date(b).getTime())
-		.map(([time, data]) => {
-			const totalChecks = data.upCount + data.downCount;
-			return {
-				x: time,
-				y:
-					data.latencies.length > 0
-						? Math.round(
-							data.latencies.reduce((a, b) => a + b, 0) /
-							data.latencies.length,
-						)
-						: null,
-				up: totalChecks === 0 ? null : data.upCount > 0,
-			};
-		});
-
-	return {
-		recentChecks,
-		stats: { avgLatency, uptime24h, uptime30d: uptime24h },
-		historyData,
-	};
-}
-
-// Main Component
 export function MonitorView({
 	monitor,
-	heartbeats,
 	onToggleActive,
 	onDelete,
 }: MonitorViewProps) {
-	const { recentChecks, stats, historyData } = useMemo(
-		() => computeMonitorData(heartbeats),
-		[heartbeats],
-	);
-
 	const isActive = monitor.active;
 
 	const handleToggle = async () => {
@@ -178,37 +46,39 @@ export function MonitorView({
 	};
 
 	return (
-		<div className="space-y-6 animate-in fade-in duration-500 max-w-7xl mx-auto pb-20">
-			{/* Header */}
-			<Header
+		<div className="space-y-5 max-w-6xl mx-auto pb-16">
+			<MonitorHeader
 				monitor={monitor}
 				isActive={isActive}
 				onToggle={handleToggle}
 				onDelete={handleDelete}
 			/>
 
-			{/* Tabs */}
-			<Tabs defaultValue="overview" className="space-y-6">
-				<TabsList className="bg-muted/50 p-1 border">
-					<TabsTrigger value="overview" className="gap-2">
-						<Activity className="w-4 h-4" /> Overview
+			<Tabs defaultValue="overview" className="space-y-5">
+				<TabsList className="bg-slate-100 p-0.5 h-8">
+					<TabsTrigger
+						value="overview"
+						className="gap-1.5 h-7 text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm"
+					>
+						<Activity className="h-3.5 w-3.5" />
+						Overview
 					</TabsTrigger>
-					<TabsTrigger value="configuration" className="gap-2">
-						<Settings className="w-4 h-4" /> Configuration
+					<TabsTrigger
+						value="configuration"
+						className="gap-1.5 h-7 text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm"
+					>
+						<Settings className="h-3.5 w-3.5" />
+						Configuration
 					</TabsTrigger>
 				</TabsList>
 
-				<TabsContent value="overview" className="space-y-6">
-					<StatsGrid
-						monitor={monitor}
-						stats={stats}
-						recentChecks={recentChecks}
-					/>
-					<ChartCard historyData={historyData} />
-					<RecentChecksCard recentChecks={recentChecks} />
+				<TabsContent value="overview" className="space-y-4 mt-0">
+					<StatsGrid monitor={monitor} stats={monitor.stats} />
+					<ChartCard historyData={monitor.history24h} stats={monitor.stats} />
+					<RecentChecksCard recentChecks={monitor.recentChecks} />
 				</TabsContent>
 
-				<TabsContent value="configuration">
+				<TabsContent value="configuration" className="mt-0">
 					<MonitorEditForm
 						monitor={monitor}
 						connectedChannelIds={monitor.channelIds}
@@ -219,364 +89,319 @@ export function MonitorView({
 	);
 }
 
-// Sub-components
-
-function Header({
-	monitor,
-	isActive,
-	onToggle,
-	onDelete,
-}: {
-	monitor: Monitor;
-	isActive: boolean;
-	onToggle: () => void;
-	onDelete: () => void;
-}) {
-	return (
-		<div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between border-b pb-6">
-			<div className="space-y-2">
-				<div className="flex items-center gap-2 text-sm text-muted-foreground">
-					<Link
-						to="/monitors"
-						className="hover:text-foreground flex items-center gap-1 transition-colors"
-					>
-						<ArrowLeft className="h-4 w-4" /> Monitors
-					</Link>
-					<span>/</span>
-					<span>Details</span>
-				</div>
-
-				<div className="flex items-center gap-4 flex-wrap">
-					<h1 className="text-3xl font-bold tracking-tight">{monitor.name}</h1>
-					<StatusBadge status={monitor.status || "pending"} />
-					{!isActive && (
-						<Badge variant="secondary" className="text-muted-foreground">
-							Paused
-						</Badge>
-					)}
-				</div>
-
-				<div className="flex items-center gap-6 text-sm">
-					{monitor.type === "http" && (
-						<a
-							href={monitor.target}
-							target="_blank"
-							rel="noreferrer"
-							className="flex items-center gap-1.5 text-muted-foreground hover:text-primary transition-colors"
-						>
-							<Globe className="h-4 w-4" />
-							{monitor.target}
-							<ExternalLink className="h-3 w-3" />
-						</a>
-					)}
-					<span className="flex items-center gap-1.5 text-muted-foreground">
-						<Activity className="h-4 w-4" />
-						Check every {monitor.frequency / 60} min
-					</span>
-				</div>
-			</div>
-
-			<div className="flex items-center gap-3">
-				<Button
-					variant="outline"
-					onClick={onToggle}
-					className={cn(
-						isActive
-							? "hover:bg-amber-50 hover:text-amber-600 hover:border-amber-200"
-							: "hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200",
-					)}
-				>
-					{isActive ? (
-						<>
-							<PauseCircle className="mr-2 h-4 w-4" /> Pause
-						</>
-					) : (
-						<>
-							<PlayCircle className="mr-2 h-4 w-4" /> Resume
-						</>
-					)}
-				</Button>
-
-				<DropdownMenu>
-					<DropdownMenuTrigger asChild>
-						<Button variant="outline" size="icon">
-							<MoreVertical className="h-4 w-4" />
-						</Button>
-					</DropdownMenuTrigger>
-					<DropdownMenuContent align="end">
-						<DropdownMenuItem onClick={onToggle}>
-							{isActive ? "Pause Checking" : "Resume Checking"}
-						</DropdownMenuItem>
-						<DropdownMenuSeparator />
-						<AlertDialog>
-							<AlertDialogTrigger asChild>
-								<DropdownMenuItem
-									onSelect={(e) => e.preventDefault()}
-									className="text-red-600 focus:text-red-700 focus:bg-red-50"
-								>
-									<Trash2 className="mr-2 h-4 w-4" /> Delete
-								</DropdownMenuItem>
-							</AlertDialogTrigger>
-							<AlertDialogContent>
-								<AlertDialogHeader>
-									<AlertDialogTitle>Delete Monitor?</AlertDialogTitle>
-									<AlertDialogDescription>
-										This will permanently delete <strong>{monitor.name}</strong>{" "}
-										and all its history.
-									</AlertDialogDescription>
-								</AlertDialogHeader>
-								<AlertDialogFooter>
-									<AlertDialogCancel>Cancel</AlertDialogCancel>
-									<AlertDialogAction
-										onClick={onDelete}
-										className="bg-red-600 hover:bg-red-700 text-white"
-									>
-										Delete
-									</AlertDialogAction>
-								</AlertDialogFooter>
-							</AlertDialogContent>
-						</AlertDialog>
-					</DropdownMenuContent>
-				</DropdownMenu>
-			</div>
-		</div>
-	);
-}
-
-function StatsGrid({
-	monitor,
-	stats,
-	recentChecks,
-}: {
-	monitor: Monitor;
-	stats: { avgLatency: number; uptime24h: number; uptime30d: number };
-	recentChecks: { time: Date }[];
-}) {
-	return (
-		<div className="grid gap-4 md:grid-cols-4">
-			<StatsCard
-				title="Current Status"
-				value={(monitor.status || "pending").toUpperCase()}
-				sub={
-					recentChecks[0]?.time
-						? new Date(recentChecks[0].time).toLocaleString()
-						: "Never"
-				}
-				icon={
-					<StatusIcon
-						status={monitor.status || "pending"}
-						className="h-4 w-4"
-					/>
-				}
-			/>
-			<StatsCard
-				title="Avg. Latency"
-				value={`${stats.avgLatency} ms`}
-				sub="Last 24 hours"
-				icon={<Clock className="h-4 w-4 text-blue-500" />}
-			/>
-			<StatsCard
-				title="24h Uptime"
-				value={`${stats.uptime24h}%`}
-				sub="Target: 99.9%"
-				icon={<Activity className="h-4 w-4 text-purple-500" />}
-			/>
-			<StatsCard
-				title="30d Uptime"
-				value={`${stats.uptime30d}%`}
-				sub="Rolling window"
-				icon={<Activity className="h-4 w-4 text-orange-500" />}
-			/>
-		</div>
-	);
-}
-
-function StatsCard({
-	title,
-	value,
-	sub,
-	icon,
-}: {
-	title: string;
-	value: string;
-	sub: string;
-	icon: React.ReactNode;
-}) {
-	return (
-		<Card>
-			<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-				<CardTitle className="text-sm font-medium text-muted-foreground">
-					{title}
-				</CardTitle>
-				{icon}
-			</CardHeader>
-			<CardContent>
-				<div className="text-2xl font-bold">{value}</div>
-				<p className="text-xs text-muted-foreground mt-1">{sub}</p>
-			</CardContent>
-		</Card>
-	);
-}
-
 function ChartCard({
 	historyData,
+	stats,
 }: {
-	historyData: { x: string; y: number | null; up: boolean | null }[];
+	historyData: MonitorDetailsHistoryEntry[];
+	stats: MonitorDetails["stats"];
 }) {
+	const downHours = historyData.filter((e) => e.up === false).length;
+
 	return (
-		<Card>
-			<CardHeader>
-				<CardTitle>Response Time & Uptime</CardTitle>
-				<CardDescription>
-					Latency and availability over the last 24 hours
-				</CardDescription>
-			</CardHeader>
-			<CardContent>
-				<div className="py-8">
-					<LatencyChart data={historyData} />
+		<div className="rounded-lg border border-slate-200 bg-white">
+			<div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
+				<div className="flex items-center gap-2">
+					<BarChart3 className="h-4 w-4 text-slate-400" />
+					<h3 className="text-sm font-medium text-slate-900">Response Time</h3>
 				</div>
-			</CardContent>
-		</Card>
+
+				<div className="flex items-center gap-4 text-xs text-slate-500">
+					<span className="flex items-center gap-1">
+						<Zap className="h-3 w-3 text-blue-500" />
+						Avg:{" "}
+						<span className="font-medium text-slate-700">
+							{stats.avgLatency}ms
+						</span>
+					</span>
+					{stats.minLatency != null && stats.maxLatency != null && (
+						<span className="hidden sm:flex items-center gap-1">
+							<Clock className="h-3 w-3" />
+							{stats.minLatency}–{stats.maxLatency}ms
+						</span>
+					)}
+					{downHours > 0 && (
+						<span className="flex items-center gap-1 text-red-600">
+							<span className="h-1.5 w-1.5 rounded-full bg-red-500" />
+							{downHours}h down
+						</span>
+					)}
+				</div>
+			</div>
+
+			<div className="px-4 pt-4 pb-3">
+				<FullWidthChart data={historyData} />
+				<div className="flex justify-between mt-3 text-[10px] text-slate-400">
+					<span>24h ago</span>
+					<span>12h ago</span>
+					<span>Now</span>
+				</div>
+			</div>
+		</div>
 	);
 }
 
-function RecentChecksCard({
-	recentChecks,
-}: {
-	recentChecks: {
-		time: Date;
-		status: string;
-		latency: number;
-		statusCode?: number;
-		message: string | null;
-	}[];
-}) {
+// Full-width responsive chart for the details page
+function FullWidthChart({ data }: { data: MonitorDetailsHistoryEntry[] }) {
+	const gradientId = useId();
+	const [hovered, setHovered] = useState<{
+		index: number;
+		clientX: number;
+		clientY: number;
+	} | null>(null);
+
+	const { points, segments } = useMemo(() => {
+		if (!data.length) return { points: [], segments: [], yMax: 0 };
+
+		const values = data.map((d) => d.y).filter((v): v is number => v !== null);
+		const yMax = values.length ? Math.max(...values) * 1.2 : 100;
+
+		const points = data.map((entry, i) => ({
+			x: (i / (data.length - 1)) * 100,
+			y: entry.y !== null ? 100 - (entry.y / yMax) * 100 : null,
+			entry,
+			index: i,
+		}));
+
+		// Build path segments for continuous data
+		const segments: { path: string; areaPath: string }[] = [];
+		let currentPoints: { x: number; y: number }[] = [];
+
+		for (const p of points) {
+			if (p.y !== null) {
+				currentPoints.push({ x: p.x, y: p.y });
+			} else if (currentPoints.length >= 2) {
+				segments.push(buildSegment(currentPoints));
+				currentPoints = [];
+			} else {
+				currentPoints = [];
+			}
+		}
+		if (currentPoints.length >= 2) {
+			segments.push(buildSegment(currentPoints));
+		}
+
+		return { points, segments, yMax };
+	}, [data]);
+
+	const handleMouseMove = useCallback(
+		(e: React.MouseEvent<SVGSVGElement>) => {
+			const rect = e.currentTarget.getBoundingClientRect();
+			const x = ((e.clientX - rect.left) / rect.width) * 100;
+
+			let closest = 0;
+			let minDist = Infinity;
+			points.forEach((p, i) => {
+				const d = Math.abs(p.x - x);
+				if (d < minDist) {
+					minDist = d;
+					closest = i;
+				}
+			});
+
+			if (minDist < 5) {
+				setHovered({ index: closest, clientX: e.clientX, clientY: e.clientY });
+			} else {
+				setHovered(null);
+			}
+		},
+		[points],
+	);
+
+	const handleMouseLeave = useCallback(() => setHovered(null), []);
+
+	if (!data.length) {
+		return (
+			<div className="h-[160px] flex items-center justify-center bg-slate-50 rounded-lg border border-dashed border-slate-200">
+				<span className="text-xs text-slate-400">No data available</span>
+			</div>
+		);
+	}
+
+	const hoveredPoint = hovered ? points[hovered.index] : null;
+	const lastValid = points.filter((p) => p.y !== null).pop();
+
+	// Determine color based on average
+	const avgLatency =
+		data.filter((d) => d.y !== null).reduce((s, d) => s + (d.y || 0), 0) /
+		data.filter((d) => d.y !== null).length || 0;
+	const color =
+		avgLatency < 200
+			? "rgb(16, 185, 129)"
+			: avgLatency < 500
+				? "rgb(245, 158, 11)"
+				: "rgb(244, 63, 94)";
+
 	return (
-		<Card>
-			<CardHeader>
-				<CardTitle className="flex items-center gap-2">
-					<History className="w-5 h-5 text-muted-foreground" />
-					Recent Checks
-				</CardTitle>
-				<CardDescription>Latest heartbeat logs</CardDescription>
-			</CardHeader>
-			<CardContent>
-				{recentChecks.length === 0 ? (
-					<div className="text-center py-8 text-muted-foreground">
-						No checks recorded yet.
-					</div>
-				) : (
-					<div className="space-y-1">
-						{recentChecks.map((check, i) => (
-							<div
-								key={i}
-								className="flex items-center justify-between py-3 border-b last:border-0 hover:bg-muted/30 px-2 rounded-md transition-colors"
-							>
-								<div className="flex items-center gap-4">
-									<div
-										className={cn(
-											"flex h-8 w-8 items-center justify-center rounded-full border",
-											check.status === "up"
-												? "bg-emerald-50 text-emerald-600 border-emerald-100"
-												: "bg-red-50 text-red-600 border-red-100",
-										)}
-									>
-										{check.status === "up" ? (
-											<CheckCircle2 className="h-4 w-4" />
-										) : (
-											<AlertTriangle className="h-4 w-4" />
-										)}
-									</div>
-									<div>
-										<p className="text-sm font-medium flex items-center gap-2">
-											<span
-												className={
-													check.status === "up"
-														? "text-emerald-700"
-														: "text-red-700"
-												}
-											>
-												{check.status.toUpperCase()}
-											</span>
-											{check.statusCode && (
-												<Badge
-													variant="outline"
-													className="text-[10px] h-5 px-1.5 font-mono"
-												>
-													{check.statusCode}
-												</Badge>
-											)}
-										</p>
-										<p className="text-xs text-muted-foreground">
-											{new Date(check.time).toLocaleString()}
-										</p>
-									</div>
-								</div>
-								<div className="flex items-center gap-6">
-									{check.message && (
-										<span
-											className="text-xs text-muted-foreground max-w-[200px] truncate hidden md:inline-block"
-											title={check.message}
-										>
-											{check.message}
-										</span>
-									)}
-									<div className="text-sm font-mono text-muted-foreground w-16 text-right">
-										{check.latency}ms
-									</div>
-								</div>
-							</div>
-						))}
-					</div>
+		<div className="relative">
+			<svg
+				viewBox="0 0 100 40"
+				preserveAspectRatio="none"
+				className="w-full h-[160px] cursor-crosshair"
+				onMouseMove={handleMouseMove}
+				onMouseLeave={handleMouseLeave}
+			>
+				<title>Response time chart</title>
+				<defs>
+					<linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+						<stop offset="0%" stopColor={color} stopOpacity={0.2} />
+						<stop offset="100%" stopColor={color} stopOpacity={0.02} />
+					</linearGradient>
+				</defs>
+
+				{/* Grid lines */}
+				<line
+					x1="0"
+					y1="50"
+					x2="100"
+					y2="50"
+					stroke="rgb(226, 232, 240)"
+					strokeWidth="0.2"
+					vectorEffect="non-scaling-stroke"
+				/>
+
+				{/* Area fills */}
+				{segments.map((seg, i) => (
+					<path
+						key={`area-${i}`}
+						d={seg.areaPath}
+						fill={`url(#${gradientId})`}
+					/>
+				))}
+
+				{/* Lines */}
+				{segments.map((seg, i) => (
+					<path
+						key={`line-${i}`}
+						d={seg.path}
+						fill="none"
+						stroke={color}
+						strokeWidth="0.5"
+						vectorEffect="non-scaling-stroke"
+						strokeLinecap="round"
+						strokeLinejoin="round"
+					/>
+				))}
+
+				{/* Down indicators */}
+				{points
+					.filter((p) => p.entry.up === false)
+					.map((p) => (
+						<circle
+							key={`down-${p.index}`}
+							cx={p.x}
+							cy="38"
+							r="0.8"
+							fill="rgb(239, 68, 68)"
+						/>
+					))}
+
+				{/* Hover line */}
+				{hoveredPoint && hoveredPoint.y !== null && (
+					<>
+						<line
+							x1={hoveredPoint.x}
+							y1="0"
+							x2={hoveredPoint.x}
+							y2="40"
+							stroke={color}
+							strokeWidth="0.3"
+							strokeDasharray="1 1"
+							vectorEffect="non-scaling-stroke"
+						/>
+						<circle
+							cx={hoveredPoint.x}
+							cy={(hoveredPoint.y / 100) * 40}
+							r="1"
+							fill="white"
+							stroke={color}
+							strokeWidth="0.4"
+							vectorEffect="non-scaling-stroke"
+						/>
+					</>
 				)}
-			</CardContent>
-		</Card>
+
+				{/* Last point indicator */}
+				{lastValid && !hoveredPoint && lastValid.y !== null && (
+					<circle
+						cx={lastValid.x}
+						cy={(lastValid.y / 100) * 40}
+						r="0.8"
+						fill={color}
+					/>
+				)}
+			</svg>
+
+			{/* Tooltip - positioned fixed to avoid scroll issues */}
+			{hovered && hoveredPoint && (
+				<ChartTooltip
+					entry={hoveredPoint.entry}
+					clientX={hovered.clientX}
+					clientY={hovered.clientY}
+				/>
+			)}
+		</div>
 	);
 }
 
-function StatusBadge({ status }: { status: string }) {
-	const styles = {
-		up: "bg-emerald-50 text-emerald-700 border-emerald-200",
-		down: "bg-red-50 text-red-700 border-red-200",
-		maintenance: "bg-amber-50 text-amber-700 border-amber-200",
-		pending: "bg-gray-50 text-gray-700 border-gray-200",
-	};
+function buildSegment(pts: { x: number; y: number }[]) {
+	const path = pts.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${(p.y / 100) * 40}`).join(" ");
+	const first = pts[0];
+	const last = pts[pts.length - 1];
+	const areaPath = `${path} L ${last.x} 40 L ${first.x} 40 Z`;
+	return { path, areaPath };
+}
 
-	const icons = {
-		up: <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" />,
-		down: <XCircle className="mr-1.5 h-3.5 w-3.5" />,
-		maintenance: <AlertTriangle className="mr-1.5 h-3.5 w-3.5" />,
-		pending: <Activity className="mr-1.5 h-3.5 w-3.5" />,
-	};
+function ChartTooltip({
+	entry,
+	clientX,
+	clientY,
+}: {
+	entry: MonitorDetailsHistoryEntry;
+	clientX: number;
+	clientY: number;
+}) {
+	const isUp = entry.up === true && entry.y !== null;
+	const isDown = entry.up === false;
 
-	const s = status as keyof typeof styles;
+	const color = isDown
+		? "rgb(239, 68, 68)"
+		: isUp
+			? entry.y! < 200
+				? "rgb(16, 185, 129)"
+				: entry.y! < 500
+					? "rgb(245, 158, 11)"
+					: "rgb(244, 63, 94)"
+			: "rgb(100, 116, 139)";
 
 	return (
-		<Badge
-			variant="outline"
-			className={cn(
-				"px-3 py-1 text-sm font-medium",
-				styles[s] || styles.pending,
-			)}
+		<div
+			className="fixed z-50 pointer-events-none"
+			style={{
+				left: clientX + 12,
+				top: clientY - 40,
+			}}
 		>
-			{icons[s] || icons.pending}
-			{status ? status.charAt(0).toUpperCase() + status.slice(1) : "Unknown"}
-		</Badge>
+			<div
+				className="bg-white border border-slate-200 rounded-md shadow-lg px-2.5 py-1.5"
+				style={{ borderLeftColor: color, borderLeftWidth: 3 }}
+			>
+				<div className="flex items-baseline gap-1.5">
+					<span
+						className="font-mono font-semibold text-sm"
+						style={{ color }}
+					>
+						{isDown ? "DOWN" : entry.y !== null ? entry.y : "—"}
+					</span>
+					{isUp && <span className="text-slate-400 text-[10px]">ms</span>}
+				</div>
+				<div className="text-slate-500 text-[10px] mt-0.5">
+					{new Date(entry.x).toLocaleTimeString([], {
+						hour: "2-digit",
+						minute: "2-digit",
+					})}
+				</div>
+			</div>
+		</div>
 	);
-}
-
-function StatusIcon({
-	status,
-	className,
-}: {
-	status: string;
-	className?: string;
-}) {
-	if (status === "up")
-		return <CheckCircle2 className={cn("text-emerald-500", className)} />;
-	if (status === "down")
-		return <XCircle className={cn("text-red-500", className)} />;
-	if (status === "maintenance")
-		return <AlertTriangle className={cn("text-amber-500", className)} />;
-	return <Activity className={cn("text-gray-500", className)} />;
 }
