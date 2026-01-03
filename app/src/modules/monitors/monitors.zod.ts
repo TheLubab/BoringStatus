@@ -2,7 +2,7 @@ import type { InferSelectModel } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-import { monitor } from "./monitors.schema";
+import { monitor, SelectMonitor } from "./monitors.schema";
 import type { HeartbeatStatus } from "../heartbeats/heartbeats.zod";
 
 // Data
@@ -154,8 +154,6 @@ export type InsertMonitor = z.infer<typeof insertMonitorSchema>;
 
 // DASHBOARD TYPES (Read Models)
 
-export type Monitor = InferSelectModel<typeof monitor>;
-
 export interface MonitorIssue {
 	message: string;
 }
@@ -166,7 +164,7 @@ export interface DashboardHistoryEntry {
 	up: boolean | null; // Was it up? (null = no data, false = down, true = up)
 }
 
-export interface DashboardMonitor extends Monitor {
+export interface DashboardMonitor extends SelectMonitor {
 	uptime: number | null;
 	history: Array<DashboardHistoryEntry> | null;
 	issues: MonitorIssue[] | null;
