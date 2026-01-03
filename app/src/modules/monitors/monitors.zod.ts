@@ -1,9 +1,11 @@
-import type { InferSelectModel } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 import { monitor, SelectMonitor } from "./monitors.schema";
 import type { HeartbeatStatus } from "../heartbeats/heartbeats.zod";
+
+// Re-export for convenience
+export type { SelectMonitor } from "./monitors.schema";
 
 // Data
 export const monitorTypeSchema = z.enum([
@@ -168,4 +170,44 @@ export interface DashboardMonitor extends SelectMonitor {
 	uptime: number | null;
 	history: Array<DashboardHistoryEntry> | null;
 	issues: MonitorIssue[] | null;
+}
+
+// MONITOR DETAILS TYPES (For View Page)
+
+export interface MonitorDetailsStats {
+	avgLatency: number;
+	minLatency: number | null;
+	maxLatency: number | null;
+	uptime24h: number | null;
+	uptime7d: number | null;
+	uptime30d: number | null;
+	totalChecks24h: number;
+	successfulChecks24h: number;
+	failedChecks24h: number;
+	lastCheckAt: Date | null;
+}
+
+export interface MonitorDetailsCheck {
+	time: Date;
+	status: HeartbeatStatus;
+	latency: number | null;
+	statusCode: number | null;
+	message: string | null;
+}
+
+export interface MonitorDetailsHistoryEntry {
+	x: string; // ISO Timestamp (hourly bucket)
+	y: number | null; // Avg latency (null = no data)
+	up: boolean | null; // Was it up? (null = no data, false = had failures, true = all up)
+	minLatency: number | null;
+	maxLatency: number | null;
+	upCount: number;
+	downCount: number;
+}
+
+export interface MonitorDetails extends SelectMonitor {
+	channelIds: string[];
+	stats: MonitorDetailsStats;
+	recentChecks: MonitorDetailsCheck[];
+	history24h: MonitorDetailsHistoryEntry[];
 }
